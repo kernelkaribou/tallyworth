@@ -7,8 +7,10 @@ Archived accounts are excluded from the current figure.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.models.account import Account, AccountValue
@@ -23,6 +25,12 @@ class NetWorthSummary:
     @property
     def net_cents(self) -> int:
         return self.assets_cents - self.liabilities_cents
+
+
+@dataclass(frozen=True)
+class NetWorthPoint:
+    recorded_at: datetime
+    net_cents: int
 
 
 def latest_value_cents_map(account_ids: list[int] | None = None) -> dict[int, int]:
@@ -75,3 +83,57 @@ def current_net_worth(
         else:
             assets += value
     return NetWorthSummary(assets_cents=assets, liabilities_cents=liabilities)
+
+
+def net_worth_series(accounts: list[Account] | None = None) -> list[NetWorthPoint]:
+    """Return net worth over time using a forward-fill of each account's value.
+
+    The series has one point per distinct timestamp at which any active account
+    recorded a value. At each timestamp every account contributes its most recent
+    value as of that moment (liabilities negative); accounts with no value yet
+    contribute zero. Because the last value is carried forward, the final point
+    equals :func:`current_net_worth`. Archived accounts are excluded so the series
+    stays consistent with the current figure.
+    """
+    if accounts is None:
+        accounts = (
+            Account.query.options(selectinload(Account.account_type))
+            .filter_by(archived=False)
+            .all()
+        )
+
+    sign = {
+        account.id: -1
+        if account.account_type.classification == Classification.liability
+        else 1
+        for account in accounts
+        if not account.archived
+    }
+    if not sign:
+        return []
+
+    rows = db.session.execute(
+        select(
+            AccountValue.account_id,
+            AccountValue.value_cents,
+            AccountValue.recorded_at,
+        )
+        .where(AccountValue.account_id.in_(sign.keys()))
+        .order_by(AccountValue.recorded_at.asc(), AccountValue.id.asc())
+    ).all()
+    if not rows:
+        return []
+
+    current: dict[int, int] = {}
+    points: list[NetWorthPoint] = []
+    last_ts: datetime | None = None
+    for account_id, value_cents, recorded_at in rows:
+        if last_ts is not None and recorded_at != last_ts:
+            net = sum(sign[aid] * value for aid, value in current.items())
+            points.append(NetWorthPoint(recorded_at=last_ts, net_cents=net))
+        current[account_id] = value_cents
+        last_ts = recorded_at
+
+    net = sum(sign[aid] * value for aid, value in current.items())
+    points.append(NetWorthPoint(recorded_at=last_ts, net_cents=net))
+    return points

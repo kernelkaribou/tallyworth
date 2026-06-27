@@ -73,7 +73,9 @@
     <div class="h-64">
       <canvas
         id="account-history-chart"
+        data-chart-source="account-history-data"
         data-symbol="{{ currency_symbol }}"
+        data-label="Value"
       ></canvas>
     </div>
   </div>
@@ -109,6 +111,6 @@
 {% block scripts %}
 {% if history %}
 <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/account-chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/line-chart.js') }}"></script>
 {% endif %}
 {% endblock %}

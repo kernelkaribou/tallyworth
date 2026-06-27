@@ -40,3 +40,24 @@ def test_detail_has_no_chart_without_history(app, client):
     assert resp.status_code == 200
     assert b"account-history-chart" not in resp.data
     assert b"chart.umd.min.js" not in resp.data
+
+
+def test_dashboard_has_networth_chart_with_history(app, client):
+    with app.app_context():
+        account_id = _make_account(name="Dash")
+    client.post(
+        f"/accounts/{account_id}/values", data={"value": "500"}, follow_redirects=True
+    )
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert b"networth-chart" in resp.data
+    assert b"networth-data" in resp.data
+    assert b"chart.umd.min.js" in resp.data
+
+
+def test_dashboard_has_no_chart_without_history(app, client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert b"networth-chart" not in resp.data
+    assert b"chart.umd.min.js" not in resp.data
+
