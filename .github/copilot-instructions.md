@@ -13,6 +13,8 @@ net worth figure, charts, and a conservative trend projection for accounts.
 
 - Single-user, self-hosted. No authentication in alpha.
 - Single currency. Display symbol configured via `CURRENCY_SYMBOL` (default `$`).
+- `SECRET_KEY`: the factory currently WARNS when unset/default. Tighten `_check_secret_key` in
+  `app/__init__.py` to raise (hard fail outside tests) BEFORE adding sessions/auth/flash/CSRF.
 - Money is stored as INTEGER CENTS. Never use floats for money.
 - Net worth = sum of latest account values, where liabilities are negative, plus asset equity
   (market value minus loan balance). Income/expenses are a SEPARATE monthly cashflow indicator

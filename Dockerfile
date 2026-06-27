@@ -3,8 +3,8 @@
 # --- Stage 1: build Tailwind CSS ---
 FROM node:22-slim AS css
 WORKDIR /build
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY app/static/css/input.css app/static/css/input.css
 COPY app/templates app/templates
 COPY app/blueprints app/blueprints
@@ -39,4 +39,4 @@ VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "wsgi:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "wsgi:app"]
