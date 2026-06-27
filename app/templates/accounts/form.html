@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% set editing = account is not none %}
+
+{% block content %}
+<section class="mx-auto max-w-lg">
+  <h1 class="text-xl font-semibold">
+    {{ "Edit account" if editing else "Add account" }}
+  </h1>
+
+  <form
+    method="post"
+    action="{{ url_for('accounts.update_account', account_id=account.id) if editing else url_for('accounts.create_account') }}"
+    class="mt-6 space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+  >
+    <div>
+      <label class="block text-sm font-medium text-slate-700" for="name">Name</label>
+      <input
+        id="name"
+        name="name"
+        type="text"
+        required
+        value="{{ account.name if editing else request.form.get('name', '') }}"
+        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        placeholder="e.g. Main Checking"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-700" for="account_type_id">
+        Account type
+      </label>
+      <select
+        id="account_type_id"
+        name="account_type_id"
+        required
+        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+      >
+        <option value="" disabled {% if not editing %}selected{% endif %}>
+          Choose a type
+        </option>
+        {% for t in account_types %}
+        <option
+          value="{{ t.id }}"
+          {% if editing and account.account_type_id == t.id %}selected{% endif %}
+        >
+          {{ t.name }} ({{ t.classification.value }})
+        </option>
+        {% endfor %}
+      </select>
+      <p class="mt-1 text-xs text-slate-500">
+        Need another type?
+        <a class="underline" href="{{ url_for('accounts.list_account_types') }}">Manage types</a>.
+      </p>
+    </div>
+
+    {% if not editing %}
+    <div>
+      <label class="block text-sm font-medium text-slate-700" for="initial_value">
+        Starting value (optional)
+      </label>
+      <div class="mt-1 flex items-center rounded-lg border border-slate-300 px-3 focus-within:border-slate-500">
+        <span class="text-slate-400">{{ currency_symbol }}</span>
+        <input
+          id="initial_value"
+          name="initial_value"
+          type="text"
+          inputmode="decimal"
+          value="{{ request.form.get('initial_value', '') }}"
+          class="w-full px-2 py-2 text-sm focus:outline-none"
+          placeholder="0.00"
+        />
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="flex items-center gap-3">
+      <button
+        type="submit"
+        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+      >
+        {{ "Save changes" if editing else "Create account" }}
+      </button>
+      <a
+        href="{{ url_for('accounts.account_detail', account_id=account.id) if editing else url_for('accounts.list_accounts') }}"
+        class="text-sm text-slate-500 hover:text-slate-700"
+      >
+        Cancel
+      </a>
+    </div>
+  </form>
+</section>
+{% endblock %}

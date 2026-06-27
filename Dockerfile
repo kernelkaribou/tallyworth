@@ -14,7 +14,8 @@ RUN npm run build:css
 FROM python:3.13-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    TALLYWORTH_DATA_DIR=/data
+    TALLYWORTH_DATA_DIR=/data \
+    FLASK_APP=wsgi.py
 
 WORKDIR /app
 
@@ -26,9 +27,11 @@ COPY app ./app
 COPY migrations ./migrations
 COPY wsgi.py ./
 COPY VERSION ./
+COPY docker-entrypoint.sh ./
 COPY --from=css /build/app/static/css/output.css ./app/static/css/output.css
 
-RUN mkdir -p /data && \
+RUN chmod +x docker-entrypoint.sh && \
+    mkdir -p /data && \
     addgroup --system app && adduser --system --ingroup app app && \
     chown -R app:app /app /data
 USER app
@@ -39,4 +42,5 @@ VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"
 
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "wsgi:app"]

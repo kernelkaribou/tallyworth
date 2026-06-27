@@ -20,11 +20,36 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
 
+    from . import models  # noqa: F401  (register models with SQLAlchemy/Alembic)
+    from .seed import register_seed_cli, seed_account_types  # noqa: F401
+
+    register_seed_cli(app)
+
     from .blueprints.main import bp as main_bp
+    from .blueprints.accounts import bp as accounts_bp
 
     app.register_blueprint(main_bp)
+    app.register_blueprint(accounts_bp)
+
+    _register_currency(app)
 
     return app
+
+
+def _register_currency(app: Flask) -> None:
+    """Expose the currency symbol and a money formatter to all templates."""
+
+    symbol = app.config.get("CURRENCY_SYMBOL", "$")
+
+    @app.template_filter("money")
+    def _money(cents: int | None) -> str:
+        if cents is None:
+            return "-"
+        return f"{symbol}{cents / 100:,.2f}"
+
+    @app.context_processor
+    def _inject_currency() -> dict:
+        return {"currency_symbol": symbol}
 
 
 def _ensure_data_dir(app: Flask) -> None:

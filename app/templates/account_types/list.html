@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+  <h1 class="text-xl font-semibold">Account types</h1>
+  <p class="mt-1 text-sm text-slate-500">
+    Standard types are built in. Add your own custom types as needed.
+  </p>
+</section>
+
+<div class="mt-6 grid gap-6 lg:grid-cols-3">
+  <div class="lg:col-span-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left text-slate-500">
+        <tr>
+          <th class="px-4 py-3 font-medium">Name</th>
+          <th class="px-4 py-3 font-medium">Classification</th>
+          <th class="px-4 py-3 font-medium">Tracks loan</th>
+          <th class="px-4 py-3 font-medium">Source</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for t in account_types %}
+        <tr>
+          <td class="px-4 py-3 font-medium text-slate-900">{{ t.name }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ t.classification.value }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ "Yes" if t.tracks_loan else "No" }}</td>
+          <td class="px-4 py-3 text-slate-500">
+            {{ "Built-in" if t.is_builtin else "Custom" }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <form
+    method="post"
+    action="{{ url_for('accounts.create_account_type') }}"
+    class="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+  >
+    <h2 class="text-sm font-semibold text-slate-700">Add a custom type</h2>
+    <div>
+      <label class="block text-sm font-medium text-slate-700" for="type_name">Name</label>
+      <input
+        id="type_name"
+        name="name"
+        type="text"
+        required
+        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        placeholder="e.g. Pension"
+      />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-slate-700" for="classification">
+        Classification
+      </label>
+      <select
+        id="classification"
+        name="classification"
+        required
+        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+      >
+        <option value="asset">Asset (adds to net worth)</option>
+        <option value="liability">Liability (subtracts from net worth)</option>
+      </select>
+    </div>
+    <label class="flex items-center gap-2 text-sm text-slate-700">
+      <input type="checkbox" name="tracks_loan" class="rounded border-slate-300" />
+      Tracks a loan / equity (e.g. property, vehicle)
+    </label>
+    <button
+      type="submit"
+      class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+    >
+      Add type
+    </button>
+  </form>
+</div>
+{% endblock %}
