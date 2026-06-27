@@ -1,6 +1,8 @@
 """Accounts blueprint: account and account-type CRUD plus value snapshots."""
 from __future__ import annotations
 
+from datetime import timezone
+
 from flask import (
     Blueprint,
     flash,
@@ -86,9 +88,20 @@ def create_account():
 @bp.get("/accounts/<int:account_id>")
 def account_detail(account_id: int):
     account = db.get_or_404(Account, account_id)
-    history = sorted(account.values, key=lambda v: v.recorded_at, reverse=True)
+    ordered = sorted(account.values, key=lambda v: (v.recorded_at, v.id))
+    history = list(reversed(ordered))
+    chart_points = [
+        {
+            "x": int(v.recorded_at.replace(tzinfo=timezone.utc).timestamp() * 1000),
+            "y": v.value_cents / 100,
+        }
+        for v in ordered
+    ]
     return render_template(
-        "accounts/detail.html", account=account, history=history
+        "accounts/detail.html",
+        account=account,
+        history=history,
+        chart_points=chart_points,
     )
 
 
