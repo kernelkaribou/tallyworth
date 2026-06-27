@@ -7,6 +7,7 @@ from flask import Blueprint, render_template
 from sqlalchemy.orm import selectinload
 
 from app.models.account import Account
+from app.services.cashflow import cashflow_summary
 from app.services.networth import (
     current_net_worth,
     latest_value_cents_map,
@@ -42,6 +43,7 @@ def index():
         values=values,
         active_count=len(active_accounts),
         chart_points=chart_points,
+        cashflow=cashflow_summary(),
     )
 
 

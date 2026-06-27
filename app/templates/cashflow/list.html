@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% macro entry_rows(entries, accent) %}
+  {% if entries %}
+  <ul class="divide-y divide-slate-100">
+    {% for entry in entries %}
+    <li class="flex items-center gap-3 px-4 py-3">
+      <form
+        method="post"
+        action="{{ url_for('cashflow.update_cashflow', entry_id=entry.id) }}"
+        class="flex flex-1 items-center gap-3"
+      >
+        <input
+          type="text"
+          name="name"
+          value="{{ entry.name }}"
+          required
+          class="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm"
+        />
+        <input
+          type="text"
+          name="amount"
+          value="{{ '%.2f'|format(entry.amount_cents / 100) }}"
+          inputmode="decimal"
+          required
+          class="w-28 rounded-lg border border-slate-200 px-3 py-1.5 text-right text-sm tabular-nums {{ accent }}"
+        />
+        <button
+          type="submit"
+          class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Save
+        </button>
+      </form>
+      <form
+        method="post"
+        action="{{ url_for('cashflow.delete_cashflow', entry_id=entry.id) }}"
+      >
+        <button
+          type="submit"
+          class="rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+        >
+          Delete
+        </button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="px-4 py-6 text-center text-sm text-slate-500">Nothing here yet.</p>
+  {% endif %}
+{% endmacro %}
+
+{% macro add_form(kind, label) %}
+<form
+  method="post"
+  action="{{ url_for('cashflow.create_cashflow') }}"
+  class="flex items-center gap-3 border-t border-slate-100 bg-slate-50 px-4 py-3"
+>
+  <input type="hidden" name="kind" value="{{ kind }}" />
+  <input
+    type="text"
+    name="name"
+    placeholder="{{ label }} name"
+    required
+    class="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm"
+  />
+  <input
+    type="text"
+    name="amount"
+    placeholder="0.00"
+    inputmode="decimal"
+    required
+    class="w-28 rounded-lg border border-slate-200 px-3 py-1.5 text-right text-sm tabular-nums"
+  />
+  <button
+    type="submit"
+    class="rounded-lg bg-slate-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+  >
+    Add
+  </button>
+</form>
+{% endmacro %}
+
+{% block content %}
+<section>
+  <h1 class="text-xl font-semibold">Monthly cashflow</h1>
+  <p class="mt-1 text-sm text-slate-500">
+    A light view of money in versus money out. Amounts are typical monthly figures, not transactions.
+    This does not affect your net worth or account liabilities.
+  </p>
+</section>
+
+<section class="mt-6 grid gap-4 sm:grid-cols-3">
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500">Income</p>
+    <p class="mt-1 text-2xl font-semibold text-emerald-600">
+      {{ summary.income_cents | money }}
+    </p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500">Expenses</p>
+    <p class="mt-1 text-2xl font-semibold text-red-600">
+      {{ summary.expense_cents | money }}
+    </p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500">
+      {% if summary.in_green %}In the green{% else %}In the red{% endif %}
+    </p>
+    <p class="mt-1 text-2xl font-semibold {% if summary.in_green %}text-emerald-600{% else %}text-red-600{% endif %}">
+      {{ summary.net_cents | money }}
+    </p>
+  </div>
+</section>
+
+<section class="mt-8 grid gap-6 lg:grid-cols-2">
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <h2 class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+      Income
+    </h2>
+    {{ entry_rows(income, "text-emerald-600") }}
+    {{ add_form("income", "Income") }}
+  </div>
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <h2 class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+      Expenses
+    </h2>
+    {{ entry_rows(expenses, "text-red-600") }}
+    {{ add_form("expense", "Expense") }}
+  </div>
+</section>
+{% endblock %}

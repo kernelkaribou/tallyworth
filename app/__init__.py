@@ -27,9 +27,11 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
 
     from .blueprints.main import bp as main_bp
     from .blueprints.accounts import bp as accounts_bp
+    from .blueprints.cashflow import bp as cashflow_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(accounts_bp)
+    app.register_blueprint(cashflow_bp)
 
     _register_currency(app)
 
