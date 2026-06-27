@@ -34,7 +34,7 @@
         <td class="px-4 py-3 text-slate-600">{{ account.account_type.name }}</td>
         <td class="px-4 py-3 text-right tabular-nums
           {% if account.account_type.classification.value == 'liability' %}text-red-600{% endif %}">
-          {{ account.current_value_cents | money }}
+          {{ values.get(account.id) | money }}
         </td>
         <td class="px-4 py-3 text-right text-slate-500">
           {% if account.archived %}Archived{% else %}Active{% endif %}

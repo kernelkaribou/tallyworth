@@ -105,6 +105,58 @@ def test_custom_type_rejects_duplicate(app, client):
     assert b"already exists" in resp.data
 
 
+def test_add_value_rejects_negative_liability(app, client):
+    with app.app_context():
+        card = _type_id("Credit Card")
+    client.post(
+        "/accounts",
+        data={"name": "Visa", "account_type_id": card},
+        follow_redirects=True,
+    )
+    with app.app_context():
+        account_id = Account.query.filter_by(name="Visa").first().id
+    resp = client.post(
+        f"/accounts/{account_id}/values", data={"value": "-50"}, follow_redirects=True
+    )
+    assert b"positive number" in resp.data
+    with app.app_context():
+        assert db.session.get(Account, account_id).current_value_cents is None
+
+
+def test_add_value_allows_negative_asset(app, client):
+    with app.app_context():
+        checking = _type_id("Checking")
+    client.post(
+        "/accounts",
+        data={"name": "Overdrawn", "account_type_id": checking},
+        follow_redirects=True,
+    )
+    with app.app_context():
+        account_id = Account.query.filter_by(name="Overdrawn").first().id
+    client.post(
+        f"/accounts/{account_id}/values", data={"value": "-25"}, follow_redirects=True
+    )
+    with app.app_context():
+        assert db.session.get(Account, account_id).current_value_cents == -2500
+
+
+def test_add_value_handles_inf_without_crashing(app, client):
+    with app.app_context():
+        checking = _type_id("Checking")
+    client.post(
+        "/accounts",
+        data={"name": "Inf", "account_type_id": checking},
+        follow_redirects=True,
+    )
+    with app.app_context():
+        account_id = Account.query.filter_by(name="Inf").first().id
+    resp = client.post(
+        f"/accounts/{account_id}/values", data={"value": "inf"}, follow_redirects=True
+    )
+    assert resp.status_code == 200
+    assert b"not a valid amount" in resp.data
+
+
 def test_dashboard_shows_net_worth(app, client):
     with app.app_context():
         checking = _type_id("Checking")

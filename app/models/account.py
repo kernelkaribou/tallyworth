@@ -8,7 +8,8 @@ from app.models.account_type import Classification
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    """Naive UTC timestamp, matching the DateTime column storage."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Account(db.Model):

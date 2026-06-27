@@ -9,11 +9,13 @@ from flask import (
     request,
     url_for,
 )
+from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.money import MoneyError, parse_money_to_cents
 from app.models.account import Account, AccountValue
 from app.models.account_type import AccountType, Classification
+from app.services.networth import latest_value_cents_map
 
 bp = Blueprint("accounts", __name__)
 
@@ -26,8 +28,13 @@ def _ordered_types() -> list[AccountType]:
 
 @bp.get("/accounts")
 def list_accounts():
-    accounts = Account.query.order_by(Account.archived, Account.name).all()
-    return render_template("accounts/list.html", accounts=accounts)
+    accounts = (
+        Account.query.options(selectinload(Account.account_type))
+        .order_by(Account.archived, Account.name)
+        .all()
+    )
+    values = latest_value_cents_map([a.id for a in accounts])
+    return render_template("accounts/list.html", accounts=accounts, values=values)
 
 
 @bp.get("/accounts/new")
@@ -189,5 +196,10 @@ def _maybe_add_value(
         cents = parse_money_to_cents(raw_value)
     except MoneyError as exc:
         return str(exc)
+    if (
+        account.account_type.classification == Classification.liability
+        and cents < 0
+    ):
+        return "Enter the amount owed as a positive number."
     account.values.append(AccountValue(value_cents=cents))
     return None

@@ -23,7 +23,14 @@ def test_parse_valid(raw, expected):
     assert parse_money_to_cents(raw) == expected
 
 
-@pytest.mark.parametrize("raw", ["", "   ", "abc", "1.234", "1.2.3", "-", "$"])
+@pytest.mark.parametrize(
+    "raw", ["", "   ", "abc", "1.234", "1.2.3", "-", "$", "inf", "-inf", "nan", "1e3", ".5", "5."]
+)
 def test_parse_invalid(raw):
     with pytest.raises(MoneyError):
         parse_money_to_cents(raw)
+
+
+def test_parse_rejects_too_large():
+    with pytest.raises(MoneyError):
+        parse_money_to_cents("9" * 20)
