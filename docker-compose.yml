@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    image: ghcr.io/kernelkaribou/tallyworth:local
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-dev-insecure-change-me}
+      CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-$$}
+    volumes:
+      - tallyworth-data:/data
+    restart: unless-stopped
+
+volumes:
+  tallyworth-data:

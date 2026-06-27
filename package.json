@@ -1,0 +1,14 @@
+{
+  "name": "tallyworth",
+  "version": "0.1.0-alpha",
+  "private": true,
+  "description": "CSS build tooling for Tallyworth (Tailwind CSS).",
+  "scripts": {
+    "build:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/output.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Tallyworth{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/output.css') }}"
+    />
+    <script
+      src="{{ url_for('static', filename='js/htmx.min.js') }}"
+      defer
+    ></script>
+  </head>
+  <body class="h-full bg-slate-50 text-slate-900">
+    <header class="border-b border-slate-200 bg-white">
+      <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+        <a href="{{ url_for('main.index') }}" class="text-xl font-semibold">
+          Tallyworth
+        </a>
+        <nav class="text-sm text-slate-500">Net worth tracking</nav>
+      </div>
+    </header>
+    <main class="mx-auto max-w-5xl px-4 py-8">
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>
