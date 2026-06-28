@@ -8,7 +8,7 @@
     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
       {{ account.account_type.name }} ({{ account.account_type.classification.value }})
       {% if account.archived %}
-        <span class="ml-2 rounded bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs">Archived</span>
+        <span class="ml-2 rounded bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs">Closed</span>
       {% endif %}
     </p>
   </div>
@@ -24,7 +24,7 @@
         type="submit"
         class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
       >
-        {{ "Restore" if account.archived else "Archive" }}
+        {{ "Reopen" if account.archived else "Close" }}
       </button>
     </form>
   </div>

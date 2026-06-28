@@ -239,7 +239,7 @@ def toggle_archive(account_id: int):
     account = db.get_or_404(Account, account_id)
     account.archived = not account.archived
     db.session.commit()
-    state = "archived" if account.archived else "restored"
+    state = "closed" if account.archived else "reopened"
     flash(f"Account {state}.", "success")
     return redirect(url_for("accounts.list_accounts"))
 
