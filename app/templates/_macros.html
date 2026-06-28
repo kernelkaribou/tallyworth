@@ -1,3 +1,7 @@
+{% macro csrf_field() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+{%- endmacro %}
+
 {% macro info_tooltip(text, label="More information") -%}
 <span class="info-tooltip relative inline-flex align-middle">
   <button

@@ -6,7 +6,7 @@ from pathlib import Path
 from flask import Flask
 
 from .config import Config
-from .extensions import db, migrate
+from .extensions import csrf, db, migrate
 
 
 def create_app(config_object: type[Config] | Config = Config) -> Flask:
@@ -19,6 +19,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
 
     db.init_app(app)
     migrate.init_app(app, db)
+    csrf.init_app(app)
 
     from . import models  # noqa: F401  (register models with SQLAlchemy/Alembic)
     from .seed import register_seed_cli, seed_account_types  # noqa: F401

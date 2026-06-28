@@ -116,7 +116,8 @@ Tallyworth is a Flask application. To run it locally without Docker:
 
 Flask, SQLAlchemy, and Flask-Migrate (Alembic) on SQLite, with server-rendered
 Jinja templates, Tailwind CSS, a touch of HTMX, and Chart.js for the charts.
-Served by gunicorn in the published Docker image.
+Forms are CSRF-protected with Flask-WTF. Served by gunicorn in the published
+Docker image.
 
 ## Status
 

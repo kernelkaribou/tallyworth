@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import csrf_field %}
 {% set is_liability = account.account_type.classification.value == 'liability' %}
 
 {% block title %}Edit value - {{ account.name }}{% endblock %}
@@ -15,6 +16,7 @@
     action="{{ url_for('accounts.update_value', account_id=account.id, value_id=value.id) }}"
     class="mt-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
   >
+    {{ csrf_field() }}
     <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="value">
       {% if account.tracks_loan %}Market value{% elif is_liability %}Balance owed{% else %}Value{% endif %}
     </label>

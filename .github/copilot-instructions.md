@@ -15,8 +15,9 @@ net worth figure, charts, and a per-timeframe net worth change summary.
 - Single currency. Display symbol configured via `CURRENCY_SYMBOL` (default `$`).
 - `SECRET_KEY`: the factory currently WARNS when unset/default. Tighten `_check_secret_key` in
   `app/__init__.py` to raise (hard fail outside tests) BEFORE adding sessions/auth/flash/CSRF.
-- CSRF: state-changing routes are unprotected POSTs (acceptable while there is no auth). Add CSRF
-  tokens (e.g. Flask-WTF `CSRFProtect`) to every POST form at the same time auth/sessions land.
+- CSRF: all state-changing POST forms are protected by Flask-WTF `CSRFProtect` (initialised in
+  `app/__init__.py`). Every form includes `{{ csrf_field() }}` (macro in `_macros.html`). Tests
+  disable it via `TestConfig.WTF_CSRF_ENABLED = False`; `tests/test_csrf.py` covers enforcement.
 - Money values are stored as integer cents and parsed via `app/money.py` (rejects empty,
   non-numeric, scientific notation, inf/nan, >2 decimals, and absurdly large values). Liability
   account values must be non-negative (amount owed); asset accounts may go negative (overdraft).

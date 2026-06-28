@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import info_tooltip, trash_icon %}
+{% from "_macros.html" import info_tooltip, trash_icon, csrf_field %}
 
 {% macro entry_rows(entries, accent) %}
   {% if entries %}
@@ -11,6 +11,7 @@
         action="{{ url_for('cashflow.update_cashflow', entry_id=entry.id) }}"
         class="flex flex-1 items-center gap-3"
       >
+        {{ csrf_field() }}
         <input
           type="text"
           name="name"
@@ -41,6 +42,7 @@
         data-confirm-label="Delete"
         data-confirm-tone="danger"
       >
+        {{ csrf_field() }}
         <button
           type="submit"
           aria-label="Delete entry"
@@ -64,6 +66,7 @@
   action="{{ url_for('cashflow.create_cashflow') }}"
   class="flex items-center gap-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 px-4 py-3"
 >
+  {{ csrf_field() }}
   <input type="hidden" name="kind" value="{{ kind }}" />
   <input
     type="text"

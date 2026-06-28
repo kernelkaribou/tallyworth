@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import csrf_field %}
 
 {% set editing = account is not none %}
 {% set lock_type = lock_type|default(false) %}
@@ -14,6 +15,7 @@
     action="{{ url_for('accounts.update_account', account_id=account.id) if editing else url_for('accounts.create_account') }}"
     class="mt-6 space-y-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
   >
+    {{ csrf_field() }}
     <div>
       <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="name">Name</label>
       <input

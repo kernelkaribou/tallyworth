@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import info_tooltip, trash_icon %}
+{% from "_macros.html" import info_tooltip, trash_icon, csrf_field %}
 
 {% block content %}
 {% set is_liability = account.account_type.classification.value == 'liability' %}
@@ -28,6 +28,7 @@
       data-confirm-tone="default"
       {% endif %}
     >
+      {{ csrf_field() }}
       <button
         type="submit"
         class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
@@ -88,6 +89,7 @@
     action="{{ url_for('accounts.add_value', account_id=account.id) }}"
     class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
   >
+    {{ csrf_field() }}
     <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="value">
       {% if account.tracks_loan %}Record market value &amp; loan{% else %}Record a new value{% endif %}
     </label>
@@ -213,6 +215,7 @@
               data-confirm-label="Delete"
               data-confirm-tone="danger"
             >
+              {{ csrf_field() }}
               <button type="submit" aria-label="Delete value" title="Delete" class="inline-flex align-middle text-slate-400 hover:text-red-700 dark:text-slate-500 dark:hover:text-red-400">{{ trash_icon() }}</button>
             </form>
           </td>
