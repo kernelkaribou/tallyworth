@@ -30,7 +30,7 @@ BUILTIN_ACCOUNT_TYPES: tuple[tuple[str, Classification, bool], ...] = (
     ("Property (Equity)", ASSET, True),
     ("Vehicle (Equity)", ASSET, True),
     ("Other Asset", ASSET, False),
-    ("Other Asset – financed (Equity)", ASSET, True),
+    ("Other Financed Asset (Equity)", ASSET, True),
     ("Credit Card", LIABILITY, False),
     ("Loan", LIABILITY, False),
     ("Other Liability", LIABILITY, False),
@@ -44,6 +44,7 @@ RENAMED_BUILTINS: dict[str, str] = {
     "Retirement (401k/IRA)": "Retirement",
     "Real Estate": "Property (Equity)",
     "Vehicle": "Vehicle (Equity)",
+    "Other Asset – financed (Equity)": "Other Financed Asset (Equity)",
 }
 
 # Built-in types removed by this revision. Dropped only when no account uses

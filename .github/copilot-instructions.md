@@ -26,7 +26,7 @@ net worth figure, charts, and a per-timeframe net worth change summary.
   and do NOT feed the net worth figure.
 - Accounts use a unified `account` table with an `account_type`. Account types have a
   `classification` (asset or liability) and a `tracks_loan` flag (equity types like
-  Property/Vehicle: net worth gets value − loan). The taxonomy is a fixed built-in set
+  Property/Vehicle: net worth gets value minus loan). The taxonomy is a fixed built-in set
   seeded by `flask seed-types` (which also migrates older renamed/removed built-ins);
   users do NOT create custom types. An account's type is locked once it has recorded values.
 - Net worth over time is computed by forward-filling each account's last known value across all
