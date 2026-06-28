@@ -50,14 +50,14 @@
       </div>
       <div>
         <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Loan balance</p>
-        <p class="mt-1 text-2xl font-semibold tabular-nums text-red-600">
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-red-700 dark:text-red-400">
           {{ account.current_loan_cents | money }}
         </p>
       </div>
       <div>
         <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Equity</p>
         <p class="mt-1 text-2xl font-semibold tabular-nums
-          {% if account.equity_cents is not none and account.equity_cents < 0 %}text-red-600{% else %}text-emerald-600{% endif %}">
+          {% if account.equity_cents is not none and account.equity_cents < 0 %}text-red-700 dark:text-red-400{% else %}text-emerald-600{% endif %}">
           {{ account.equity_cents | money }}
         </p>
       </div>
@@ -66,12 +66,12 @@
   {% elif is_liability %}
   <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Balance owed</p>
-    <p class="mt-1 text-3xl font-semibold tabular-nums text-red-600 dark:text-red-400">
+    <p class="mt-1 text-3xl font-semibold tabular-nums text-red-700 dark:text-red-400">
       {{ account.current_value_cents | money }}
     </p>
     <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
       Net worth impact
-      <span class="font-medium text-red-600 dark:text-red-400">{{ account.signed_value_cents | money }}</span>
+      <span class="font-medium text-red-700 dark:text-red-400">{{ account.signed_value_cents | money }}</span>
     </p>
   </div>
   {% else %}
@@ -190,10 +190,10 @@
           </td>
           {% if account.tracks_loan %}
           <td class="px-4 py-3 text-right tabular-nums">{{ v.value_cents | money }}</td>
-          <td class="px-4 py-3 text-right tabular-nums text-red-600">{{ v.loan_cents | money }}</td>
+          <td class="px-4 py-3 text-right tabular-nums text-red-700 dark:text-red-400">{{ v.loan_cents | money }}</td>
           <td class="px-4 py-3 text-right tabular-nums font-medium">{{ v.equity_cents | money }}</td>
           {% else %}
-          <td class="px-4 py-3 text-right tabular-nums {% if is_liability %}text-red-600 dark:text-red-400{% endif %}">{{ v.value_cents | money }}</td>
+          <td class="px-4 py-3 text-right tabular-nums {% if is_liability %}text-red-700 dark:text-red-400{% endif %}">{{ v.value_cents | money }}</td>
           {% endif %}
           <td class="px-4 py-3 text-right whitespace-nowrap">
             <a
@@ -213,7 +213,7 @@
               data-confirm-label="Delete"
               data-confirm-tone="danger"
             >
-              <button type="submit" aria-label="Delete value" title="Delete" class="inline-flex align-middle text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">{{ trash_icon() }}</button>
+              <button type="submit" aria-label="Delete value" title="Delete" class="inline-flex align-middle text-slate-400 hover:text-red-700 dark:text-slate-500 dark:hover:text-red-400">{{ trash_icon() }}</button>
             </form>
           </td>
         </tr>

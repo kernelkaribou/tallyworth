@@ -198,7 +198,7 @@
     if (delta > 0) {
       toneClass = "text-emerald-600 dark:text-emerald-400";
     } else if (delta < 0) {
-      toneClass = "text-red-600 dark:text-red-400";
+      toneClass = "text-red-700 dark:text-red-400";
     } else {
       toneClass = "text-slate-500 dark:text-slate-400";
     }
