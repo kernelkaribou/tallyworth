@@ -26,15 +26,22 @@
   function open(form) {
     pendingForm = form;
     lastFocused = document.activeElement;
+    var tone = form.dataset.confirmTone || "danger";
     titleEl.textContent = form.dataset.confirmTitle || "Are you sure?";
     messageEl.textContent =
       form.dataset.confirm || "This action cannot be undone.";
     acceptBtn.textContent = form.dataset.confirmLabel || "Confirm";
-    acceptBtn.className =
-      form.dataset.confirmTone === "default" ? toneDefault : toneDanger;
+    acceptBtn.className = tone === "default" ? toneDefault : toneDanger;
     modal.classList.remove("hidden");
     modal.classList.add("flex");
-    acceptBtn.focus();
+    // For destructive (danger) actions focus Cancel first so an accidental
+    // Enter/Space dismisses rather than confirms; default-tone actions focus
+    // the primary button for quick confirmation.
+    if (tone === "default") {
+      acceptBtn.focus();
+    } else {
+      cancelBtn.focus();
+    }
   }
 
   function close() {
@@ -77,7 +84,37 @@
     if (e.target === modal) close();
   });
 
+  function focusable() {
+    return Array.prototype.slice.call(
+      modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter(function (el) {
+      return !el.disabled && el.offsetParent !== null;
+    });
+  }
+
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !modal.classList.contains("hidden")) close();
+    if (modal.classList.contains("hidden")) return;
+    if (e.key === "Escape") {
+      close();
+      return;
+    }
+    // Trap Tab focus within the dialog so keyboard focus cannot reach the page
+    // behind it. Derived from the dialog's actual focusable controls so it stays
+    // correct if the dialog's contents change.
+    if (e.key === "Tab") {
+      var items = focusable();
+      if (items.length === 0) return;
+      var first = items[0];
+      var last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
   });
 })();

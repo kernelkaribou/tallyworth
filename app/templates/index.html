@@ -2,6 +2,7 @@
 {% from "_macros.html" import info_tooltip %}
 
 {% block content %}
+<h1 class="sr-only">Dashboard</h1>
 <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
   <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Current net worth</p>
@@ -56,14 +57,14 @@
       Net Worth Summary
       {{ info_tooltip("Based on active accounts only.") }}
     </h2>
-    <div id="networth-timeframe" class="flex flex-wrap items-center gap-1">
-      <button type="button" class="timeframe-btn" data-range="1m">1M</button>
-      <button type="button" class="timeframe-btn" data-range="3m">3M</button>
-      <button type="button" class="timeframe-btn is-active" data-range="1y">1Y</button>
-      <button type="button" class="timeframe-btn" data-range="ytd">YTD</button>
-      <button type="button" class="timeframe-btn" data-range="3y">3Y</button>
-      <button type="button" class="timeframe-btn" data-range="5y">5Y</button>
-      <button type="button" class="timeframe-btn" data-range="lifetime">Lifetime</button>
+    <div id="networth-timeframe" role="group" aria-label="Chart timeframe" class="flex flex-wrap items-center gap-1">
+      <button type="button" class="timeframe-btn" data-range="1m" aria-pressed="false">1M</button>
+      <button type="button" class="timeframe-btn" data-range="3m" aria-pressed="false">3M</button>
+      <button type="button" class="timeframe-btn is-active" data-range="1y" aria-pressed="true">1Y</button>
+      <button type="button" class="timeframe-btn" data-range="ytd" aria-pressed="false">YTD</button>
+      <button type="button" class="timeframe-btn" data-range="3y" aria-pressed="false">3Y</button>
+      <button type="button" class="timeframe-btn" data-range="5y" aria-pressed="false">5Y</button>
+      <button type="button" class="timeframe-btn" data-range="lifetime" aria-pressed="false">Lifetime</button>
     </div>
   </div>
   <p id="networth-summary" class="mt-2 text-sm text-slate-500 dark:text-slate-400"></p>
@@ -127,6 +128,7 @@
           <polyline points="6 9 12 15 18 9" />
         </svg>
         {% endif %}
+        <span class="sr-only">Net worth impact {{ 'up' if trend.improved else 'down' }} by </span>
         {{ trend.delta_cents | abs | money }}
       </span>
       {% elif trend and trend.direction == 'flat' %}

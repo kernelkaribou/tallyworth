@@ -17,6 +17,7 @@
           name="name"
           value="{{ entry.name }}"
           required
+          aria-label="{{ entry.kind.value | capitalize }} name"
           class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm"
         />
         <input
@@ -25,6 +26,7 @@
           value="{{ '%.2f'|format(entry.amount_cents / 100) }}"
           inputmode="decimal"
           required
+          aria-label="{{ entry.kind.value | capitalize }} amount"
           class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums {{ accent }}"
         />
         <button
@@ -73,6 +75,7 @@
     name="name"
     placeholder="{{ label }} name"
     required
+    aria-label="{{ label }} name"
     class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm"
   />
   <input
@@ -81,6 +84,7 @@
     placeholder="0.00"
     inputmode="decimal"
     required
+    aria-label="{{ label }} amount"
     class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums"
   />
   <button

@@ -115,7 +115,9 @@
       btn.addEventListener("click", function () {
         inst.range = btn.dataset.range;
         Array.prototype.forEach.call(buttons, function (other) {
-          other.classList.toggle("is-active", other === btn);
+          var active = other === btn;
+          other.classList.toggle("is-active", active);
+          other.setAttribute("aria-pressed", active ? "true" : "false");
         });
         applyRange(inst);
       });
