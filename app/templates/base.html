@@ -4,6 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Tallyworth{% endblock %}</title>
+    <link
+      rel="icon"
+      type="image/webp"
+      href="{{ url_for('static', filename='img/logo.webp') }}"
+    />
     <script nonce="{{ csp_nonce }}">
       // Apply the saved theme before paint to avoid a flash of the wrong theme.
       (function () {

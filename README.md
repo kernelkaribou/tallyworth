@@ -1,5 +1,9 @@
 # Tallyworth
 
+<p align="center">
+  <img src="app/static/img/logo.webp" alt="Tallyworth logo" width="200" />
+</p>
+
 Tallyworth is a simple, self-hosted web app for tracking your personal net worth
 over time. Think of it as a tidy spreadsheet that lives in your browser: you add
 your accounts, update their values whenever you like, and Tallyworth shows you
