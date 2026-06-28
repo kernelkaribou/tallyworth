@@ -44,40 +44,41 @@ in full control of the numbers you enter.
 
 ### Run with Docker (recommended)
 
-The easiest way to run Tallyworth is with Docker Compose.
+```yaml
+# docker-compose.yml
+services:
+  web:
+    image: ghcr.io/kernelkaribou/tallyworth:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./tallyworth-data:/data
+    restart: unless-stopped
+```
 
-1. Copy the example environment file and set a strong secret key:
+```sh
+docker compose up -d
+```
 
-   ```sh
-   cp .env.example .env
-   # Generate a key with:
-   python -c "import secrets; print(secrets.token_hex(32))"
-   # then paste it into .env as SECRET_KEY=...
-   ```
+Then open <http://localhost:8000>. That's it. There is no authentication, so run
+it on a trusted network or behind your own access controls.
 
-2. Start the app:
-
-   ```sh
-   docker compose up --build
-   ```
-
-3. Open <http://localhost:8000> in your browser.
-
-Your data is stored in a SQLite database on the `tallyworth-data` Docker volume,
-so it persists across restarts and upgrades. The container applies database
-migrations and seeds the built-in account types automatically on startup.
+Everything persistent lives in one place: the **`/data`** volume. Bind it to a
+host folder (`./tallyworth-data` above) and it holds the SQLite database and an
+auto-generated secret key, so your data and sessions survive restarts and
+upgrades. There is nothing to configure first: migrations run and the built-in
+account types are seeded automatically on startup, and a secret key is created
+the first time it boots.
 
 ### Configuration
 
-Tallyworth is configured through environment variables:
+Tallyworth runs with zero configuration. Everything below is optional:
 
-| Variable              | Required | Default                         | Description                                               |
-| --------------------- | -------- | ------------------------------- | --------------------------------------------------------- |
-| `SECRET_KEY`          | Yes      | none (startup fails without it) | Random secret used to secure the app. The app refuses to start if this is unset or left at the insecure default. |
-| `DEFAULT_CURRENCY`    | No       | `USD`                           | ISO currency code (USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SEK, NZD, ZAR). Sets the symbol shown next to amounts. Unknown codes fall back to USD. |
-| `CURRENCY_SYMBOL`     | No       | (from `DEFAULT_CURRENCY`)       | Optional raw symbol override for a currency not in the list. Takes precedence over `DEFAULT_CURRENCY`. |
-| `DATABASE_URL`        | No       | SQLite file in the data dir     | SQLAlchemy database URL, if you want a different store.    |
-| `TALLYWORTH_DATA_DIR` | No       | `./data` (or `/data` in Docker) | Directory where the SQLite database is kept.              |
+| Variable           | Default                   | Description                                                                 |
+| ------------------ | ------------------------- | --------------------------------------------------------------------------- |
+| `DEFAULT_CURRENCY` | `USD`                     | ISO code (USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SEK, NZD, ZAR). Unknown codes fall back to USD. |
+| `CURRENCY_SYMBOL`  | (from `DEFAULT_CURRENCY`) | Raw symbol override for a currency not in the list. Wins over `DEFAULT_CURRENCY`. |
+| `SECRET_KEY`       | auto-generated in `/data` | Only set this if you want to supply your own (e.g. shared across replicas). |
 
 ## Development
 
@@ -102,13 +103,13 @@ Tallyworth is a Flask application. To run it locally without Docker:
 
    ```sh
    export FLASK_APP=wsgi.py
-   export SECRET_KEY=dev-only-not-for-production
    flask db upgrade
    flask seed-types
    flask run
    ```
 
-   Then open <http://localhost:5000>.
+   Then open <http://localhost:5000>. A secret key is auto-generated under
+   `./data`; set `SECRET_KEY` only if you want to pin your own.
 
 ### Common tasks
 
@@ -118,16 +119,11 @@ Tallyworth is a Flask application. To run it locally without Docker:
 
 ## Tech stack
 
-Flask, SQLAlchemy, and Flask-Migrate (Alembic) on SQLite, with server-rendered
-Jinja templates, Tailwind CSS, a touch of HTMX, and Chart.js for the charts.
-Forms are CSRF-protected with Flask-WTF. Served by gunicorn in the published
-Docker image.
-
-## Status
-
-Tallyworth is in early alpha (see `VERSION`). Features and data structures may
-change. There is no built-in authentication yet, so run it on a trusted network
-or behind your own access controls.
+- **Backend:** Flask + SQLAlchemy + Flask-Migrate (Alembic), served by gunicorn
+- **Database:** SQLite (single file in `/data`)
+- **Frontend:** server-rendered Jinja templates, Tailwind CSS, a touch of HTMX, Chart.js
+- **Security:** CSRF-protected forms (Flask-WTF) and a strict Content-Security-Policy
+- **Deploy:** single Docker image, one mounted volume, zero required config
 
 ## Disclaimer
 

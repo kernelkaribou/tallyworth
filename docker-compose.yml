@@ -1,16 +1,13 @@
 services:
   web:
-    build: .
-    image: ghcr.io/kernelkaribou/tallyworth:local
+    image: ghcr.io/kernelkaribou/tallyworth:latest
     ports:
       - "8000:8000"
-    environment:
-      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in your environment or .env (see .env.example)}
-      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
-      CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-}
     volumes:
-      - tallyworth-data:/data
+      # All persistent data (SQLite database + auto-generated secret) lives here.
+      - ./tallyworth-data:/data
     restart: unless-stopped
 
-volumes:
-  tallyworth-data:
+    # Optional: set a display currency (defaults to USD).
+    # environment:
+    #   DEFAULT_CURRENCY: EUR

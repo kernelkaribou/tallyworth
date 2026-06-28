@@ -13,9 +13,9 @@ net worth figure, charts, and a per-timeframe net worth change summary.
 
 - Single-user, self-hosted. No authentication in alpha.
 - Single currency. Display symbol configured via `CURRENCY_SYMBOL` (default `$`).
-- `SECRET_KEY`: the factory HARD FAILS (raises `RuntimeError`) when the key is unset or set to
-  the insecure default outside of tests; supply a strong `SECRET_KEY` to run. See `_check_secret_key`
-  in `app/__init__.py`.
+- `SECRET_KEY`: optional. When unset, `_ensure_secret_key` in `app/__init__.py` generates a strong
+  key and persists it at `DATA_DIR/secret_key` (auto-created), so a fresh deploy needs no config;
+  set the env var to override. SQLite DB and secret both live in `DATA_DIR` (`/data` in Docker).
 - Security headers: `_register_security_headers` in `app/__init__.py` adds `X-Content-Type-Options`,
   `X-Frame-Options`, `Referrer-Policy`, and a CSP. Inline `<script>` blocks (theme bootstrap, theme
   toggle, account-form loan reveal) carry a per-request `nonce="{{ csp_nonce }}"`; add the nonce to

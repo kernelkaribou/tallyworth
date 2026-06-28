@@ -16,7 +16,7 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.config.from_object(config_object)
 
     _ensure_data_dir(app)
-    _check_secret_key(app)
+    _ensure_secret_key(app)
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -112,17 +112,26 @@ def _ensure_data_dir(app: Flask) -> None:
             Path(data_dir).mkdir(parents=True, exist_ok=True)
 
 
-def _check_secret_key(app: Flask) -> None:
-    """Refuse to run on an unset or insecure default secret key.
+def _ensure_secret_key(app: Flask) -> None:
+    """Use an explicit SECRET_KEY when given, else auto-provision a persistent one.
 
-    The test suite (TESTING) is exempt so fixtures need not supply one.
+    Tallyworth has no user accounts; the secret only signs session cookies and
+    CSRF tokens for this single self-hosted instance. Rather than make operators
+    generate and manage a key, we persist a strong random one next to the
+    database (in DATA_DIR) so it survives restarts while keeping deployment to
+    "mount a data volume." Set the SECRET_KEY environment variable to override
+    (for example to share one secret across multiple replicas).
     """
-    if app.config.get("TESTING"):
+    if app.config.get("SECRET_KEY"):
         return
-    insecure = app.config.get("INSECURE_SECRET_KEY", "dev-insecure-change-me")
-    if app.config.get("SECRET_KEY") in (None, "", insecure):
-        raise RuntimeError(
-            "SECRET_KEY is unset or using the insecure default. Set a strong "
-            "SECRET_KEY (for example via the SECRET_KEY environment variable) "
-            "before starting Tallyworth."
-        )
+    if app.config.get("TESTING"):
+        app.config["SECRET_KEY"] = "testing-only-secret"
+        return
+
+    data_dir = Path(app.config["DATA_DIR"])
+    data_dir.mkdir(parents=True, exist_ok=True)
+    key_file = data_dir / "secret_key"
+    if not key_file.exists():
+        key_file.write_text(secrets.token_urlsafe(48))
+        key_file.chmod(0o600)
+    app.config["SECRET_KEY"] = key_file.read_text().strip()

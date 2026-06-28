@@ -1,10 +1,8 @@
-"""Tests for security headers, the CSP nonce, and the secret-key guard."""
+"""Tests for security headers, the CSP nonce, and secret-key provisioning."""
 from __future__ import annotations
 
-import pytest
-
 from app import create_app
-from app.config import Config, TestConfig
+from app.config import Config
 
 
 def test_security_headers_present(client):
@@ -25,20 +23,31 @@ def test_csp_nonce_is_applied_to_inline_scripts(client):
     assert f'nonce="{nonce}"'.encode() in resp.data
 
 
-def test_insecure_secret_key_hard_fails_outside_testing():
-    class InsecureConfig(Config):
+def test_secret_key_is_autoprovisioned_and_persisted(tmp_path):
+    class DiskConfig(Config):
         TESTING = False
+        DATA_DIR = tmp_path
         SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-        SECRET_KEY = Config.INSECURE_SECRET_KEY
+        SECRET_KEY = None
 
-    with pytest.raises(RuntimeError, match="SECRET_KEY"):
-        create_app(InsecureConfig)
+    app = create_app(DiskConfig)
+    key_file = tmp_path / "secret_key"
+    assert key_file.exists()
+    assert app.config["SECRET_KEY"] == key_file.read_text().strip()
+    assert len(app.config["SECRET_KEY"]) >= 32
+
+    # A second start reuses the persisted key instead of generating a new one.
+    app2 = create_app(DiskConfig)
+    assert app2.config["SECRET_KEY"] == app.config["SECRET_KEY"]
 
 
-def test_strong_secret_key_starts_outside_testing():
-    class SecureConfig(TestConfig):
+def test_explicit_secret_key_overrides_autoprovision(tmp_path):
+    class SecureConfig(Config):
         TESTING = False
+        DATA_DIR = tmp_path
+        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
         SECRET_KEY = "a-strong-secret-value"
 
     app = create_app(SecureConfig)
-    assert app is not None
+    assert app.config["SECRET_KEY"] == "a-strong-secret-value"
+    assert not (tmp_path / "secret_key").exists()

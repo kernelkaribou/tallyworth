@@ -11,16 +11,14 @@ DATA_DIR = Path(os.environ.get("TALLYWORTH_DATA_DIR", BASE_DIR / "data"))
 class Config:
     """Base configuration driven by environment variables."""
 
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-change-me")
+    # Optional. When unset, a strong key is generated and persisted in DATA_DIR
+    # on first start (see app/__init__.py:_ensure_secret_key), so a fresh deploy
+    # needs nothing more than a mounted data volume.
+    SECRET_KEY = os.environ.get("SECRET_KEY")
 
     DATA_DIR = DATA_DIR
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", f"sqlite:///{DATA_DIR / 'tallyworth.db'}"
-    )
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{DATA_DIR / 'tallyworth.db'}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # Sentinel for the known-insecure development secret.
-    INSECURE_SECRET_KEY = "dev-insecure-change-me"
 
     # Display currency. Set DEFAULT_CURRENCY to an ISO code from the catalog
     # (e.g. USD, EUR, GBP, JPY) and the matching symbol is shown in the UI.
