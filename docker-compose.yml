@@ -6,7 +6,8 @@ services:
       - "8000:8000"
     environment:
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in your environment or .env (see .env.example)}
-      CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-$$}
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-USD}
+      CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-}
     volumes:
       - tallyworth-data:/data
     restart: unless-stopped

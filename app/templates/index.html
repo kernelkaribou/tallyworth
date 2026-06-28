@@ -2,8 +2,8 @@
 
 {% block content %}
 <section class="grid gap-4 sm:grid-cols-3">
-  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:col-span-3">
-    <p class="text-sm font-medium uppercase tracking-wide text-slate-500">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:col-span-3">
+    <p class="text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
       Current net worth
     </p>
     <p class="mt-1 text-4xl font-semibold
@@ -11,48 +11,48 @@
       {{ summary.net_cents | money }}
     </p>
   </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500">Assets</p>
-    <p class="mt-1 text-2xl font-semibold text-slate-900">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Assets</p>
+    <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
       {{ summary.assets_cents | money }}
     </p>
   </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500">Liabilities</p>
-    <p class="mt-1 text-2xl font-semibold text-slate-900">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Liabilities</p>
+    <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
       {{ summary.liabilities_cents | money }}
     </p>
   </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500">Active accounts</p>
-    <p class="mt-1 text-2xl font-semibold text-slate-900">{{ active_count }}</p>
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Active accounts</p>
+    <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ active_count }}</p>
   </div>
-  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:col-span-3">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:col-span-3">
     <div class="flex items-center justify-between">
       <div>
         {% if cashflow.has_entries %}
-        <p class="text-sm font-medium text-slate-500">
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
           Monthly cashflow
           {% if cashflow.in_green %}(in the green){% else %}(in the red){% endif %}
         </p>
         <p class="mt-1 text-2xl font-semibold {% if cashflow.in_green %}text-emerald-600{% else %}text-red-600{% endif %}">
           {{ cashflow.net_cents | money }}
         </p>
-        <p class="mt-1 text-xs text-slate-500">
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
           {{ cashflow.income_cents | money }} in &middot; {{ cashflow.expense_cents | money }} out
           &middot; does not affect net worth
         </p>
         {% else %}
-        <p class="text-sm font-medium text-slate-500">Monthly cashflow</p>
-        <p class="mt-1 text-2xl font-semibold text-slate-400">Not set up</p>
-        <p class="mt-1 text-xs text-slate-500">
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly cashflow</p>
+        <p class="mt-1 text-2xl font-semibold text-slate-400 dark:text-slate-500">Not set up</p>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Add income and expenses to see if you are in the green.
         </p>
         {% endif %}
       </div>
       <a
         href="{{ url_for('cashflow.list_cashflow') }}"
-        class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        class="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
       >
         {% if cashflow.has_entries %}Manage{% else %}Set up{% endif %}
       </a>
@@ -63,10 +63,10 @@
 {% if chart_points %}
 <section class="mt-8">
   <h2 class="text-lg font-semibold">Net worth over time</h2>
-  <p class="mt-1 text-sm text-slate-500">
+  <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
     Active accounts only.{% if projection_points %} The dashed line is a simple past-trend estimate, not financial advice or a guarantee.{% endif %}
   </p>
-  <div class="mt-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+  <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
     <div class="h-72">
       <canvas
         id="networth-chart"
@@ -89,32 +89,32 @@
   <h2 class="text-lg font-semibold">Accounts</h2>
   <a
     href="{{ url_for('accounts.new_account') }}"
-    class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+    class="rounded-lg bg-slate-900 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:hover:bg-slate-600"
   >
     Add account
   </a>
 </section>
 
 {% if accounts %}
-<div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+<div class="mt-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
   <table class="w-full text-sm">
-    <thead class="bg-slate-50 text-left text-slate-500">
+    <thead class="bg-slate-50 dark:bg-slate-900/40 text-left text-slate-500 dark:text-slate-400">
       <tr>
         <th class="px-4 py-3 font-medium">Name</th>
         <th class="px-4 py-3 font-medium">Type</th>
         <th class="px-4 py-3 text-right font-medium">Current value</th>
       </tr>
     </thead>
-    <tbody class="divide-y divide-slate-100">
+    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
       {% for account in accounts %}
-      <tr class="hover:bg-slate-50">
+      <tr class="hover:bg-slate-50 dark:hover:bg-slate-700">
         <td class="px-4 py-3">
-          <a class="font-medium text-slate-900 hover:underline"
+          <a class="font-medium text-slate-900 dark:text-slate-100 hover:underline"
              href="{{ url_for('accounts.account_detail', account_id=account.id) }}">
             {{ account.name }}
           </a>
         </td>
-        <td class="px-4 py-3 text-slate-600">{{ account.account_type.name }}</td>
+        <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ account.account_type.name }}</td>
         <td class="px-4 py-3 text-right tabular-nums
           {% if account.account_type.classification.value == 'liability' %}text-red-600{% endif %}">
           {{ values.get(account.id) | money }}
@@ -125,7 +125,7 @@
   </table>
 </div>
 {% else %}
-<p class="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+<p class="mt-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-8 text-center text-slate-500 dark:text-slate-400">
   No accounts yet. Add your first account to start tracking your net worth.
 </p>
 {% endif %}

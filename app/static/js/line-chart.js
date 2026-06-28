@@ -14,6 +14,31 @@
     return;
   }
 
+  var instances = [];
+
+  function isDark() {
+    return document.documentElement.classList.contains("dark");
+  }
+
+  function theme() {
+    if (isDark()) {
+      return {
+        line: "#e2e8f0",
+        fill: "rgba(226, 232, 240, 0.08)",
+        projection: "#94a3b8",
+        text: "#94a3b8",
+        grid: "rgba(148, 163, 184, 0.15)",
+      };
+    }
+    return {
+      line: "#0f172a",
+      fill: "rgba(15, 23, 42, 0.08)",
+      projection: "#64748b",
+      text: "#475569",
+      grid: "rgba(148, 163, 184, 0.2)",
+    };
+  }
+
   var canvases = document.querySelectorAll("canvas[data-chart-source]");
   Array.prototype.forEach.call(canvases, function (canvas) {
     var dataEl = document.getElementById(canvas.dataset.chartSource);
@@ -43,13 +68,19 @@
         }
       }
     }
-    renderChart(canvas, points, projection);
+    instances.push({
+      canvas: canvas,
+      points: points,
+      projection: projection,
+      chart: renderChart(canvas, points, projection),
+    });
   });
 
   function renderChart(canvas, points, projection) {
     var symbol = canvas.dataset.symbol || "$";
     var label = canvas.dataset.label || "Value";
     var projectionLabel = canvas.dataset.projectionLabel || "Projected";
+    var colors = theme();
 
     function formatMoney(value) {
       return (
@@ -65,8 +96,8 @@
       {
         label: label,
         data: points,
-        borderColor: "#0f172a",
-        backgroundColor: "rgba(15, 23, 42, 0.08)",
+        borderColor: colors.line,
+        backgroundColor: colors.fill,
         borderWidth: 2,
         tension: 0.25,
         fill: true,
@@ -79,7 +110,7 @@
       datasets.push({
         label: projectionLabel,
         data: projection,
-        borderColor: "#64748b",
+        borderColor: colors.projection,
         backgroundColor: "transparent",
         borderWidth: 2,
         borderDash: [6, 6],
@@ -90,7 +121,7 @@
       });
     }
 
-    new Chart(canvas, {
+    return new Chart(canvas, {
       type: "line",
       data: {
         datasets: datasets,
@@ -103,6 +134,7 @@
           x: {
             type: "linear",
             ticks: {
+              color: colors.text,
               autoSkip: true,
               maxRotation: 0,
               callback: function (value) {
@@ -115,14 +147,20 @@
           },
           y: {
             ticks: {
+              color: colors.text,
               callback: function (value) {
                 return formatMoney(value);
               },
             },
+            grid: { color: colors.grid },
           },
         },
         plugins: {
-          legend: { display: !!projection, position: "bottom" },
+          legend: {
+            display: !!projection,
+            position: "bottom",
+            labels: { color: colors.text },
+          },
           tooltip: {
             callbacks: {
               title: function (items) {
@@ -141,4 +179,16 @@
       },
     });
   }
+
+  // Re-render all charts with the current theme (called when dark mode toggles).
+  window.TallyworthCharts = {
+    refresh: function () {
+      instances.forEach(function (inst) {
+        if (inst.chart) {
+          inst.chart.destroy();
+        }
+        inst.chart = renderChart(inst.canvas, inst.points, inst.projection);
+      });
+    },
+  };
 })();

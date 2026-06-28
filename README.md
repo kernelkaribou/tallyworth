@@ -32,6 +32,10 @@ in full control of the numbers you enter.
 - **Note your monthly cash flow.** Record recurring monthly income and expenses
   to see whether your month is in the green or the red. This is informational
   only and does not affect your net worth.
+- **Dark mode.** Toggle between light and dark themes from the top navigation;
+  your choice is remembered in your browser.
+- **Pick your currency.** Set your display currency once via an environment
+  variable (see the configuration table below).
 
 ## Getting started
 
@@ -67,7 +71,8 @@ Tallyworth is configured through environment variables:
 | Variable              | Required | Default                         | Description                                               |
 | --------------------- | -------- | ------------------------------- | --------------------------------------------------------- |
 | `SECRET_KEY`          | Yes      | (insecure dev default)          | Random secret used to secure the app. Set a strong value. |
-| `CURRENCY_SYMBOL`     | No       | `$`                             | Symbol shown next to amounts in the UI.                   |
+| `DEFAULT_CURRENCY`    | No       | `USD`                           | ISO currency code (USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SEK, NZD, ZAR). Sets the symbol shown next to amounts. Unknown codes fall back to USD. |
+| `CURRENCY_SYMBOL`     | No       | (from `DEFAULT_CURRENCY`)       | Optional raw symbol override for a currency not in the list. Takes precedence over `DEFAULT_CURRENCY`. |
 | `DATABASE_URL`        | No       | SQLite file in the data dir     | SQLAlchemy database URL, if you want a different store.    |
 | `TALLYWORTH_DATA_DIR` | No       | `./data` (or `/data` in Docker) | Directory where the SQLite database is kept.              |
 

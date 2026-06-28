@@ -22,8 +22,12 @@ class Config:
     # Sentinel for the known-insecure development secret.
     INSECURE_SECRET_KEY = "dev-insecure-change-me"
 
-    # Single-currency display symbol for alpha.
-    CURRENCY_SYMBOL = os.environ.get("CURRENCY_SYMBOL", "$")
+    # Display currency. Set DEFAULT_CURRENCY to an ISO code from the catalog
+    # (e.g. USD, EUR, GBP, JPY) and the matching symbol is shown in the UI.
+    # CURRENCY_SYMBOL is an optional raw override for a symbol not in the
+    # catalog; when set it takes precedence over DEFAULT_CURRENCY.
+    DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "USD")
+    CURRENCY_SYMBOL = os.environ.get("CURRENCY_SYMBOL")
 
 
 class TestConfig(Config):

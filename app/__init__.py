@@ -39,9 +39,18 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
 
 
 def _register_currency(app: Flask) -> None:
-    """Expose the currency symbol and a money formatter to all templates."""
+    """Expose the currency symbol and a money formatter to all templates.
 
-    symbol = app.config.get("CURRENCY_SYMBOL", "$")
+    The symbol comes from CURRENCY_SYMBOL when set (a raw override), otherwise
+    from the DEFAULT_CURRENCY ISO code resolved against the known catalog.
+    """
+    from app.currencies import get_currency
+
+    override = app.config.get("CURRENCY_SYMBOL")
+    if override:
+        symbol = override
+    else:
+        symbol = get_currency(app.config.get("DEFAULT_CURRENCY")).symbol
 
     @app.template_filter("money")
     def _money(cents: int | None) -> str:

@@ -2,3 +2,6 @@
 
 @source "../../templates/**/*.html";
 @source "../../blueprints/**/*.py";
+
+/* Enable class-based dark mode: `dark:` styles apply under <html class="dark">. */
+@custom-variant dark (&:where(.dark, .dark *));
