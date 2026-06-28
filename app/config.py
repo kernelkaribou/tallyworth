@@ -27,6 +27,11 @@ class Config:
     DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "USD")
     CURRENCY_SYMBOL = os.environ.get("CURRENCY_SYMBOL")
 
+    # Display timezone. Timestamps are always stored in UTC; this only controls
+    # the zone snapshot dates are shown in. Set TZ to any IANA name (e.g.
+    # America/New_York); an unknown value falls back to UTC.
+    DISPLAY_TIMEZONE = os.environ.get("TZ", "UTC")
+
 
 class TestConfig(Config):
     """Configuration used by the test suite."""

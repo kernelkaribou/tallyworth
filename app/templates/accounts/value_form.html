@@ -8,7 +8,7 @@
 <section class="mx-auto max-w-md">
   <h1 class="text-xl font-semibold">Edit value</h1>
   <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-    {{ account.name }} &middot; recorded {{ value.recorded_at.strftime("%Y-%m-%d %H:%M UTC") }}
+    {{ account.name }} &middot; recorded {{ value.recorded_at | localdt("%Y-%m-%d %H:%M %Z") }}
   </p>
 
   <form

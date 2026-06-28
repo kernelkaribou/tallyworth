@@ -36,9 +36,40 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(cashflow_bp)
 
     _register_currency(app)
+    _register_datetime(app)
     _register_security_headers(app)
 
     return app
+
+
+def _register_datetime(app: Flask) -> None:
+    """Render stored UTC timestamps in the configured display timezone.
+
+    Snapshot timestamps are stored as naive UTC. We resolve the TZ env var to an
+    IANA zone (falling back to UTC when unknown) and expose a ``localdt`` filter
+    plus the zone name to templates, so dates read in the operator's local time
+    while storage stays UTC. The JS charts receive the same zone name to keep the
+    axis and tooltips consistent with the tables.
+    """
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+    name = (app.config.get("DISPLAY_TIMEZONE") or "UTC").strip() or "UTC"
+    try:
+        zone = ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        zone, name = timezone.utc, "UTC"
+
+    @app.template_filter("localdt")
+    def _localdt(value: datetime | None, fmt: str = "%Y-%m-%d %H:%M %Z") -> str:
+        if value is None:
+            return "-"
+        aware = value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
+        return aware.astimezone(zone).strftime(fmt)
+
+    @app.context_processor
+    def _inject_timezone() -> dict:
+        return {"display_timezone": name}
 
 
 def _register_security_headers(app: Flask) -> None:

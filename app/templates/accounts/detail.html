@@ -165,6 +165,7 @@
         data-symbol="{{ currency_symbol }}"
         {% if show_baseline %}data-baseline="zero"{% endif %}
         data-label="{% if account.tracks_loan %}Equity{% elif is_liability %}Net worth impact{% else %}Value{% endif %}"
+        data-timezone="{{ display_timezone }}"
       ></canvas>
     </div>
   </div>
@@ -188,7 +189,7 @@
         {% for v in history %}
         <tr>
           <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-            {{ v.recorded_at.strftime("%Y-%m-%d %H:%M UTC") }}
+            {{ v.recorded_at | localdt("%Y-%m-%d %H:%M %Z") }}
           </td>
           {% if account.tracks_loan %}
           <td class="px-4 py-3 text-right tabular-nums">{{ v.value_cents | money }}</td>
@@ -207,9 +208,9 @@
               action="{{ url_for('accounts.delete_value', account_id=account.id, value_id=v.id) }}"
               class="ml-3 inline"
               {% if account.tracks_loan %}
-              data-confirm="Deleting the entry from {{ v.recorded_at.strftime('%b %d, %Y') }} (value {{ v.value_cents | money }}, loan {{ v.loan_cents | money }}) cannot be undone."
+              data-confirm="Deleting the entry from {{ v.recorded_at | localdt('%b %d, %Y') }} (value {{ v.value_cents | money }}, loan {{ v.loan_cents | money }}) cannot be undone."
               {% else %}
-              data-confirm="Deleting the {{ 'balance' if is_liability else 'value' }} of {{ v.value_cents | money }} recorded on {{ v.recorded_at.strftime('%b %d, %Y') }} cannot be undone."
+              data-confirm="Deleting the {{ 'balance' if is_liability else 'value' }} of {{ v.value_cents | money }} recorded on {{ v.recorded_at | localdt('%b %d, %Y') }} cannot be undone."
               {% endif %}
               data-confirm-title="Delete value?"
               data-confirm-label="Delete"

@@ -5,12 +5,13 @@
 //                         array of {x: epoch_ms, y: value} points
 //   data-symbol         : currency symbol for axis/tooltip formatting (default $)
 //   data-label          : dataset label (default "Value")
+//   data-timezone       : IANA zone for date formatting (default UTC)
 //   data-summary-target : optional id of an element to fill with a plain-language
 //                         change summary for the currently selected timeframe
 //
-// A linear epoch-millisecond x-axis is used with manual UTC date formatting so
-// no Chart.js date adapter is required. Dates are rendered in UTC to match the
-// timestamps shown elsewhere in the UI.
+// A linear epoch-millisecond x-axis is used with manual date formatting so no
+// Chart.js date adapter is required. Dates are rendered in the configured
+// display timezone (data-timezone, default UTC) to match the tables.
 (function () {
   if (typeof Chart === "undefined") {
     return;
@@ -40,6 +41,27 @@
       grid: "rgba(148, 184, 169, 0.2)",
       zero: "rgba(100, 139, 123, 0.55)",
     };
+  }
+
+  // Year of a date in the given IANA zone, falling back to UTC. Used so the YTD
+  // boundary lands on Jan 1 local time rather than UTC.
+  function yearInZone(date, tz) {
+    try {
+      return Number(
+        date.toLocaleDateString("en-US", { timeZone: tz || "UTC", year: "numeric" })
+      );
+    } catch (e) {
+      return date.getUTCFullYear();
+    }
+  }
+
+  // Format an epoch-ms value as a date in the given IANA zone (default UTC).
+  function formatDate(ms, tz) {
+    try {
+      return new Date(ms).toLocaleDateString(undefined, { timeZone: tz || "UTC" });
+    } catch (e) {
+      return new Date(ms).toLocaleDateString(undefined, { timeZone: "UTC" });
+    }
   }
 
   function formatMoney(symbol, value) {
@@ -96,6 +118,7 @@
       points: points,
       symbol: canvas.dataset.symbol || "$",
       label: canvas.dataset.label || "Value",
+      tz: canvas.dataset.timezone || "UTC",
       summaryEl: canvas.dataset.summaryTarget
         ? document.getElementById(canvas.dataset.summaryTarget)
         : null,
@@ -130,7 +153,7 @@
   // Translate a timeframe key into the earliest x (epoch ms) to display, or
   // undefined for "lifetime" (show all history). Clamped to the first data
   // point so we never render empty space before the series starts.
-  function rangeStart(range, points) {
+  function rangeStart(range, points, tz) {
     var firstX = points[0].x;
     var now = Date.now();
     var minX;
@@ -138,7 +161,7 @@
       case "1m": minX = now - 30 * DAY_MS; break;
       case "3m": minX = now - 91 * DAY_MS; break;
       case "1y": minX = now - 365 * DAY_MS; break;
-      case "ytd": minX = Date.UTC(new Date().getUTCFullYear(), 0, 1); break;
+      case "ytd": minX = Date.UTC(yearInZone(new Date(), tz), 0, 1); break;
       case "3y": minX = now - 1095 * DAY_MS; break;
       case "5y": minX = now - 1825 * DAY_MS; break;
       default: return undefined;
@@ -153,7 +176,7 @@
     var range = inst.range || "lifetime";
     var points = inst.points;
     var lastActual = points[points.length - 1].x;
-    var minX = rangeStart(range, points);
+    var minX = rangeStart(range, points, inst.tz);
     if (minX !== undefined && minX >= lastActual) minX = points[0].x;
     var startX = minX === undefined ? points[0].x : minX;
 
@@ -238,6 +261,7 @@
   function renderChart(canvas, points) {
     var symbol = canvas.dataset.symbol || "$";
     var label = canvas.dataset.label || "Value";
+    var tz = canvas.dataset.timezone || "UTC";
     var colors = theme();
     var baseline = canvas.dataset.baseline === "zero";
 
@@ -285,9 +309,7 @@
               autoSkip: true,
               maxRotation: 0,
               callback: function (value) {
-                return new Date(value).toLocaleDateString(undefined, {
-                  timeZone: "UTC",
-                });
+                return formatDate(value, tz);
               },
             },
             grid: { display: false },
@@ -311,9 +333,7 @@
           tooltip: {
             callbacks: {
               title: function (items) {
-                return new Date(items[0].parsed.x).toLocaleDateString(undefined, {
-                  timeZone: "UTC",
-                });
+                return formatDate(items[0].parsed.x, tz);
               },
               label: function (ctx) {
                 return formatMoney(symbol, ctx.parsed.y);
