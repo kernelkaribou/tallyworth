@@ -17,7 +17,7 @@ from app.extensions import db
 from app.money import MoneyError, parse_money_to_cents
 from app.models.account import Account, AccountValue
 from app.models.account_type import AccountType, Classification
-from app.services.networth import latest_value_cents_map
+from app.services.networth import display_value_map, latest_snapshot_map
 
 bp = Blueprint("accounts", __name__)
 
@@ -35,7 +35,7 @@ def list_accounts():
         .order_by(Account.archived, Account.name)
         .all()
     )
-    values = latest_value_cents_map([a.id for a in accounts])
+    values = display_value_map(accounts)
     return render_template("accounts/list.html", accounts=accounts, values=values)
 
 
@@ -69,7 +69,11 @@ def create_account():
     db.session.add(account)
     db.session.flush()
 
-    error = _maybe_add_value(account, request.form.get("initial_value"))
+    error = _maybe_add_value(
+        account,
+        request.form.get("initial_value"),
+        request.form.get("initial_loan"),
+    )
     if error:
         db.session.rollback()
         flash(error, "error")
@@ -93,7 +97,7 @@ def account_detail(account_id: int):
     chart_points = [
         {
             "x": int(v.recorded_at.replace(tzinfo=timezone.utc).timestamp() * 1000),
-            "y": v.value_cents / 100,
+            "y": (v.equity_cents if account.tracks_loan else v.value_cents) / 100,
         }
         for v in ordered
     ]
@@ -141,7 +145,12 @@ def update_account(account_id: int):
 @bp.post("/accounts/<int:account_id>/values")
 def add_value(account_id: int):
     account = db.get_or_404(Account, account_id)
-    error = _maybe_add_value(account, request.form.get("value"), required=True)
+    error = _maybe_add_value(
+        account,
+        request.form.get("value"),
+        request.form.get("loan"),
+        required=True,
+    )
     if error:
         db.session.rollback()
         flash(error, "error")
@@ -186,6 +195,13 @@ def create_account_type():
         flash("Please choose a valid classification.", "error")
         return redirect(url_for("accounts.list_account_types"))
 
+    if tracks_loan and classification == Classification.liability:
+        flash(
+            "Loan tracking applies to assets only, not liabilities.",
+            "error",
+        )
+        return redirect(url_for("accounts.list_account_types"))
+
     db.session.add(
         AccountType(
             name=name,
@@ -200,10 +216,23 @@ def create_account_type():
 
 
 def _maybe_add_value(
-    account: Account, raw_value: str | None, required: bool = False
+    account: Account,
+    raw_value: str | None,
+    raw_loan: str | None = None,
+    required: bool = False,
 ) -> str | None:
-    """Add a value snapshot from a raw money string. Returns an error message or None."""
+    """Add a value snapshot from raw money strings. Returns an error message or None.
+
+    For loan-tracking accounts a non-negative loan balance is required alongside
+    the market value (enter 0 if the asset is owned outright).
+    """
     if raw_value is None or raw_value.strip() == "":
+        if (
+            account.account_type.tracks_loan
+            and raw_loan is not None
+            and raw_loan.strip() != ""
+        ):
+            return "Enter a market value to go with the loan balance."
         return "A value is required." if required else None
     try:
         cents = parse_money_to_cents(raw_value)
@@ -214,5 +243,19 @@ def _maybe_add_value(
         and cents < 0
     ):
         return "Enter the amount owed as a positive number."
-    account.values.append(AccountValue(value_cents=cents))
+    if account.account_type.tracks_loan and cents < 0:
+        return "Market value cannot be negative."
+
+    loan_cents: int | None = None
+    if account.account_type.tracks_loan:
+        if raw_loan is None or raw_loan.strip() == "":
+            return "A loan balance is required (enter 0 if owned outright)."
+        try:
+            loan_cents = parse_money_to_cents(raw_loan)
+        except MoneyError as exc:
+            return str(exc)
+        if loan_cents < 0:
+            return "Loan balance cannot be negative."
+
+    account.values.append(AccountValue(value_cents=cents, loan_cents=loan_cents))
     return None

@@ -30,12 +30,38 @@
 </section>
 
 <section class="mt-6 grid gap-4 sm:grid-cols-2">
+  {% if account.tracks_loan %}
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:col-span-2">
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div>
+        <p class="text-sm font-medium text-slate-500">Market value</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
+          {{ account.current_value_cents | money }}
+        </p>
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Loan balance</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-red-600">
+          {{ account.current_loan_cents | money }}
+        </p>
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Equity</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums
+          {% if account.equity_cents is not none and account.equity_cents < 0 %}text-red-600{% else %}text-emerald-600{% endif %}">
+          {{ account.equity_cents | money }}
+        </p>
+      </div>
+    </div>
+  </div>
+  {% else %}
   <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
     <p class="text-sm font-medium text-slate-500">Current value</p>
     <p class="mt-1 text-3xl font-semibold tabular-nums text-slate-900">
       {{ account.current_value_cents | money }}
     </p>
   </div>
+  {% endif %}
 
   <form
     method="post"
@@ -43,7 +69,7 @@
     class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
   >
     <label class="block text-sm font-medium text-slate-700" for="value">
-      Record a new value
+      {% if account.tracks_loan %}Record market value &amp; loan{% else %}Record a new value{% endif %}
     </label>
     <div class="mt-1 flex items-center rounded-lg border border-slate-300 px-3 focus-within:border-slate-500">
       <span class="text-slate-400">{{ currency_symbol }}</span>
@@ -54,9 +80,24 @@
         inputmode="decimal"
         required
         class="w-full px-2 py-2 text-sm focus:outline-none"
-        placeholder="0.00"
+        placeholder="{% if account.tracks_loan %}Market value{% else %}0.00{% endif %}"
       />
     </div>
+    {% if account.tracks_loan %}
+    <div class="mt-2 flex items-center rounded-lg border border-slate-300 px-3 focus-within:border-slate-500">
+      <span class="text-slate-400">{{ currency_symbol }}</span>
+      <input
+        id="loan"
+        name="loan"
+        type="text"
+        inputmode="decimal"
+        required
+        value="{% if account.current_loan_cents is not none %}{{ '%.2f'|format(account.current_loan_cents / 100) }}{% endif %}"
+        class="w-full px-2 py-2 text-sm focus:outline-none"
+        placeholder="Loan balance (0 if owned outright)"
+      />
+    </div>
+    {% endif %}
     <button
       type="submit"
       class="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
@@ -75,7 +116,7 @@
         id="account-history-chart"
         data-chart-source="account-history-data"
         data-symbol="{{ currency_symbol }}"
-        data-label="Value"
+        data-label="{% if account.tracks_loan %}Equity{% else %}Value{% endif %}"
       ></canvas>
     </div>
   </div>
@@ -85,7 +126,13 @@
       <thead class="bg-slate-50 text-left text-slate-500">
         <tr>
           <th class="px-4 py-3 font-medium">Recorded</th>
+          {% if account.tracks_loan %}
+          <th class="px-4 py-3 text-right font-medium">Market value</th>
+          <th class="px-4 py-3 text-right font-medium">Loan</th>
+          <th class="px-4 py-3 text-right font-medium">Equity</th>
+          {% else %}
           <th class="px-4 py-3 text-right font-medium">Value</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
@@ -94,7 +141,13 @@
           <td class="px-4 py-3 text-slate-600">
             {{ v.recorded_at.strftime("%Y-%m-%d %H:%M UTC") }}
           </td>
+          {% if account.tracks_loan %}
           <td class="px-4 py-3 text-right tabular-nums">{{ v.value_cents | money }}</td>
+          <td class="px-4 py-3 text-right tabular-nums text-red-600">{{ v.loan_cents | money }}</td>
+          <td class="px-4 py-3 text-right tabular-nums font-medium">{{ v.equity_cents | money }}</td>
+          {% else %}
+          <td class="px-4 py-3 text-right tabular-nums">{{ v.value_cents | money }}</td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>

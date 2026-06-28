@@ -66,7 +66,7 @@
       </select>
     </div>
     <label class="flex items-center gap-2 text-sm text-slate-700">
-      <input type="checkbox" name="tracks_loan" class="rounded border-slate-300" />
+      <input type="checkbox" id="tracks_loan" name="tracks_loan" class="rounded border-slate-300" />
       Tracks a loan / equity (e.g. property, vehicle)
     </label>
     <button
@@ -77,4 +77,24 @@
     </button>
   </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const classification = document.getElementById("classification");
+    const tracksLoan = document.getElementById("tracks_loan");
+    if (!classification || !tracksLoan) return;
+    function sync() {
+      const isLiability = classification.value === "liability";
+      if (isLiability) {
+        tracksLoan.checked = false;
+      }
+      tracksLoan.disabled = isLiability;
+      tracksLoan.closest("label").classList.toggle("opacity-50", isLiability);
+    }
+    classification.addEventListener("change", sync);
+    sync();
+  })();
+</script>
 {% endblock %}

@@ -10,7 +10,8 @@ from app.models.account import Account
 from app.services.cashflow import cashflow_summary
 from app.services.networth import (
     current_net_worth,
-    latest_value_cents_map,
+    display_value_map,
+    latest_snapshot_map,
     net_worth_series,
 )
 
@@ -26,8 +27,9 @@ def index():
         .order_by(Account.name)
         .all()
     )
-    values = latest_value_cents_map([a.id for a in active_accounts])
-    summary = current_net_worth(active_accounts, values)
+    snapshots = latest_snapshot_map([a.id for a in active_accounts])
+    values = display_value_map(active_accounts, snapshots)
+    summary = current_net_worth(active_accounts, snapshots)
     series = net_worth_series(active_accounts)
     chart_points = [
         {

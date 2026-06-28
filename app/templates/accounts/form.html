@@ -42,6 +42,7 @@
         {% for t in account_types %}
         <option
           value="{{ t.id }}"
+          data-tracks-loan="{{ 't' if t.tracks_loan else 'f' }}"
           {% if editing and account.account_type_id == t.id %}selected{% endif %}
         >
           {{ t.name }} ({{ t.classification.value }})
@@ -72,6 +73,27 @@
         />
       </div>
     </div>
+
+    <div id="initial-loan-wrap" class="hidden">
+      <label class="block text-sm font-medium text-slate-700" for="initial_loan">
+        Loan balance (optional)
+      </label>
+      <div class="mt-1 flex items-center rounded-lg border border-slate-300 px-3 focus-within:border-slate-500">
+        <span class="text-slate-400">{{ currency_symbol }}</span>
+        <input
+          id="initial_loan"
+          name="initial_loan"
+          type="text"
+          inputmode="decimal"
+          value="{{ request.form.get('initial_loan', '') }}"
+          class="w-full px-2 py-2 text-sm focus:outline-none"
+          placeholder="0.00 (enter 0 if owned outright)"
+        />
+      </div>
+      <p class="mt-1 text-xs text-slate-500">
+        Equity is the starting value minus this loan balance.
+      </p>
+    </div>
     {% endif %}
 
     <div class="flex items-center gap-3">
@@ -90,4 +112,25 @@
     </div>
   </form>
 </section>
+{% endblock %}
+
+{% block scripts %}
+{% if not editing %}
+<script>
+  (function () {
+    var select = document.getElementById("account_type_id");
+    var loanWrap = document.getElementById("initial-loan-wrap");
+    if (!select || !loanWrap) {
+      return;
+    }
+    function sync() {
+      var option = select.options[select.selectedIndex];
+      var tracksLoan = option && option.dataset.tracksLoan === "t";
+      loanWrap.classList.toggle("hidden", !tracksLoan);
+    }
+    select.addEventListener("change", sync);
+    sync();
+  })();
+</script>
+{% endif %}
 {% endblock %}
