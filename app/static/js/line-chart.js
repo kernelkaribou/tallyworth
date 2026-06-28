@@ -28,6 +28,7 @@
         projection: "#94a3b8",
         text: "#94a3b8",
         grid: "rgba(148, 163, 184, 0.15)",
+        zero: "rgba(148, 163, 184, 0.55)",
       };
     }
     return {
@@ -36,6 +37,31 @@
       projection: "#64748b",
       text: "#475569",
       grid: "rgba(148, 163, 184, 0.2)",
+      zero: "rgba(100, 116, 139, 0.55)",
+    };
+  }
+
+  // Draws a solid horizontal line at y = 0 so liabilities (plotted as negative
+  // net-worth impact) read clearly as sitting below zero and rising toward it.
+  function zeroLinePlugin(colors) {
+    return {
+      id: "zeroLine",
+      afterDraw: function (chart) {
+        var yScale = chart.scales.y;
+        if (!yScale) return;
+        var y = yScale.getPixelForValue(0);
+        var area = chart.chartArea;
+        if (y < area.top || y > area.bottom) return;
+        var ctx = chart.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(area.left, y);
+        ctx.lineTo(area.right, y);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = colors.zero;
+        ctx.stroke();
+        ctx.restore();
+      },
     };
   }
 
@@ -81,6 +107,21 @@
     var label = canvas.dataset.label || "Value";
     var projectionLabel = canvas.dataset.projectionLabel || "Projected";
     var colors = theme();
+    var baseline = canvas.dataset.baseline === "zero";
+
+    var yMin = null;
+    var yMax = null;
+    if (baseline) {
+      var all = points.slice();
+      if (projection) all = all.concat(projection);
+      all.forEach(function (p) {
+        if (yMin === null || p.y < yMin) yMin = p.y;
+        if (yMax === null || p.y > yMax) yMax = p.y;
+      });
+      // Always keep zero within view so the baseline is meaningful.
+      yMin = Math.min(0, yMin === null ? 0 : yMin);
+      yMax = Math.max(0, yMax === null ? 0 : yMax);
+    }
 
     function formatMoney(value) {
       return (
@@ -126,6 +167,7 @@
       data: {
         datasets: datasets,
       },
+      plugins: baseline ? [zeroLinePlugin(colors)] : [],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -146,6 +188,8 @@
             grid: { display: false },
           },
           y: {
+            suggestedMin: baseline ? yMin : undefined,
+            suggestedMax: baseline ? yMax : undefined,
             ticks: {
               color: colors.text,
               callback: function (value) {

@@ -79,7 +79,7 @@ def latest_value_cents_map(account_ids: list[int] | None = None) -> dict[int, in
     }
 
 
-def _contribution_cents(account: Account, value_cents: int, loan_cents: int | None) -> int:
+def net_worth_impact_cents(account: Account, value_cents: int, loan_cents: int | None) -> int:
     """Signed net-worth contribution for one account's latest snapshot."""
     if account.account_type.classification == Classification.liability:
         return -value_cents
@@ -149,12 +149,15 @@ def current_net_worth(
 class AccountTrend:
     """Trend summary for one account's tile on the dashboard.
 
-    ``current_cents`` / ``previous_cents`` are the latest two display values
-    (equity for loan-tracking accounts, market value otherwise; liabilities keep
-    their positive magnitude). ``direction`` describes the raw movement of that
-    number, while ``improved`` says whether the change is good for net worth (so
-    a paid-down liability counts as an improvement even though the number fell).
-    ``spark_points`` is a ready-to-draw SVG polyline string over a 100x28 box.
+    Everything here is framed by **net-worth impact** (the signed contribution of
+    the account: assets positive, liabilities negative, loan-tracking assets use
+    equity). ``current_cents`` / ``previous_cents`` are the latest two impact
+    values. ``direction`` is the movement of that impact, so ``up`` always means
+    the account improved your net worth (a paid-down liability moves up toward
+    zero). ``improved`` mirrors that (True for up, False for down, None when
+    flat). ``delta_cents`` is the change in impact (positive == improvement).
+    ``spark_points`` is a ready-to-draw SVG polyline of the impact series over a
+    100x28 box.
     """
 
     direction: str  # "up" | "down" | "flat" | "none"
@@ -175,7 +178,7 @@ _SPARK_PAD = 3.0
 
 
 def _spark_polyline(values: list[int]) -> str | None:
-    """Normalise display values into an SVG polyline string over a 100x28 box."""
+    """Normalise an impact series into an SVG polyline string over a 100x28 box."""
     if len(values) < 2:
         return None
     lo = min(values)
@@ -219,17 +222,11 @@ def account_trends(accounts: list[Account]) -> dict[int, AccountTrend]:
     series: dict[int, list[int]] = {aid: [] for aid in by_id}
     for account_id, value_cents, loan_cents in rows:
         account = by_id[account_id]
-        if account.account_type.tracks_loan:
-            display = value_cents - (loan_cents or 0)
-        else:
-            display = value_cents
-        series[account_id].append(display)
+        series[account_id].append(
+            net_worth_impact_cents(account, value_cents, loan_cents)
+        )
 
     for account_id, values in series.items():
-        account = by_id[account_id]
-        is_liability = (
-            account.account_type.classification == Classification.liability
-        )
         current = values[-1] if values else None
         previous = values[-2] if len(values) >= 2 else None
 
@@ -238,18 +235,18 @@ def account_trends(accounts: list[Account]) -> dict[int, AccountTrend]:
             improved: bool | None = None
             delta: int | None = None
         else:
+            # Series is net-worth impact, so a rise is always an improvement
+            # (a paid-down liability moves up toward zero).
             delta = current - previous
             if delta > 0:
                 direction = "up"
+                improved = True
             elif delta < 0:
                 direction = "down"
+                improved = False
             else:
                 direction = "flat"
-            if delta == 0:
                 improved = None
-            else:
-                # For liabilities a smaller balance is better; for assets larger.
-                improved = (delta < 0) if is_liability else (delta > 0)
 
         trends[account_id] = AccountTrend(
             direction=direction,
@@ -304,7 +301,7 @@ def net_worth_series(accounts: list[Account] | None = None) -> list[NetWorthPoin
             points.append(
                 NetWorthPoint(recorded_at=last_ts, net_cents=sum(current.values()))
             )
-        current[account_id] = _contribution_cents(
+        current[account_id] = net_worth_impact_cents(
             active[account_id], value_cents, loan_cents
         )
         last_ts = recorded_at

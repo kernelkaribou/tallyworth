@@ -117,7 +117,7 @@
       {% set tone = 'text-emerald-600 dark:text-emerald-400' if trend.improved else 'text-red-600 dark:text-red-400' %}
       <span
         class="inline-flex shrink-0 items-center gap-1 text-xs font-medium {{ tone }}"
-        title="Since last value"
+        title="Change in net worth impact since the last value"
       >
         {% if trend.direction == 'up' %}
         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -139,7 +139,7 @@
 
     <p class="mt-3 text-2xl font-semibold tabular-nums
       {% if is_liability %}text-red-600 dark:text-red-400{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-      {{ values.get(account.id) | money }}
+      {{ values.get(account.id) | money }}{% if is_liability and values.get(account.id) is not none %}<span class="ml-1 text-sm font-normal text-slate-500 dark:text-slate-400">owed</span>{% endif %}
     </p>
 
     <div class="mt-3 h-7">

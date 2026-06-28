@@ -51,9 +51,13 @@ def test_trend_liability_paid_down_is_improvement(app):
         acct.values.append(_value(300_00))
         db.session.commit()
         trend = account_trends([acct])[aid]
-        # The number fell, but for a liability that is good for net worth.
-        assert trend.direction == "down"
+        # Trends are framed by net-worth impact: paying down a liability moves
+        # its impact up toward zero (-500 -> -300), so direction is "up".
+        assert trend.direction == "up"
         assert trend.improved is True
+        assert trend.current_cents == -300_00
+        assert trend.previous_cents == -500_00
+        assert trend.delta_cents == 200_00
 
 
 def test_trend_none_without_two_values(app):
@@ -93,6 +97,31 @@ def test_dashboard_renders_tiles_with_sparkline(app, client):
     assert resp.status_code == 200
     assert b"<polyline" in resp.data  # sparkline present
     assert b"Tiled" in resp.data
+
+
+def test_liability_tile_shows_owed_and_improvement(app, client):
+    with app.app_context():
+        aid = _make_account("Visa", type_name="Credit Card")
+    client.post(f"/accounts/{aid}/values", data={"value": "500"}, follow_redirects=True)
+    client.post(f"/accounts/{aid}/values", data={"value": "300"}, follow_redirects=True)
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert b"owed" in resp.data
+
+
+def test_liability_detail_uses_net_worth_impact(app, client):
+    with app.app_context():
+        aid = _make_account("Visa", type_name="Credit Card")
+    client.post(f"/accounts/{aid}/values", data={"value": "500"}, follow_redirects=True)
+    client.post(f"/accounts/{aid}/values", data={"value": "300"}, follow_redirects=True)
+    resp = client.get(f"/accounts/{aid}")
+    assert resp.status_code == 200
+    assert b"Balance owed" in resp.data
+    assert b"Net worth impact" in resp.data
+    assert b'data-baseline="zero"' in resp.data
+    # Chart series is the signed impact, so values are negative.
+    assert b'"y": -300.0' in resp.data or b'"y":-300.0' in resp.data
+    assert b'"y": -500.0' in resp.data or b'"y":-500.0' in resp.data
 
 
 def _value(value_cents, loan_cents=None):

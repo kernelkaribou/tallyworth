@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% set is_liability = account.account_type.classification.value == 'liability' %}
 <section class="flex flex-wrap items-start justify-between gap-4">
   <div>
     <h1 class="text-xl font-semibold">{{ account.name }}</h1>
@@ -53,6 +54,17 @@
         </p>
       </div>
     </div>
+  </div>
+  {% elif is_liability %}
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Balance owed</p>
+    <p class="mt-1 text-3xl font-semibold tabular-nums text-red-600 dark:text-red-400">
+      {{ account.current_value_cents | money }}
+    </p>
+    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+      Net worth impact
+      <span class="font-medium text-red-600 dark:text-red-400">{{ account.signed_value_cents | money }}</span>
+    </p>
   </div>
   {% else %}
   <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
@@ -118,10 +130,16 @@
         {% if projection_points %}data-projection-source="account-history-projection"
         data-projection-label="Projected trend"{% endif %}
         data-symbol="{{ currency_symbol }}"
-        data-label="{% if account.tracks_loan %}Equity{% else %}Value{% endif %}"
+        {% if show_baseline %}data-baseline="zero"{% endif %}
+        data-label="{% if account.tracks_loan %}Equity{% elif is_liability %}Net worth impact{% else %}Value{% endif %}"
       ></canvas>
     </div>
   </div>
+  {% if is_liability %}
+  <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+    Net worth impact over time. Paying down this liability moves the line upward toward {{ 0 | money }}.
+  </p>
+  {% endif %}
   {% if projection_points %}
   <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">The dashed line is a simple past-trend estimate, not financial advice or a guarantee.</p>
   {% endif %}
@@ -139,7 +157,7 @@
           <th class="px-4 py-3 text-right font-medium">Loan</th>
           <th class="px-4 py-3 text-right font-medium">Equity</th>
           {% else %}
-          <th class="px-4 py-3 text-right font-medium">Value</th>
+          <th class="px-4 py-3 text-right font-medium">{% if is_liability %}Balance owed{% else %}Value{% endif %}</th>
           {% endif %}
         </tr>
       </thead>
@@ -154,7 +172,7 @@
           <td class="px-4 py-3 text-right tabular-nums text-red-600">{{ v.loan_cents | money }}</td>
           <td class="px-4 py-3 text-right tabular-nums font-medium">{{ v.equity_cents | money }}</td>
           {% else %}
-          <td class="px-4 py-3 text-right tabular-nums">{{ v.value_cents | money }}</td>
+          <td class="px-4 py-3 text-right tabular-nums {% if is_liability %}text-red-600 dark:text-red-400{% endif %}">{{ v.value_cents | money }}</td>
           {% endif %}
         </tr>
         {% endfor %}
