@@ -70,14 +70,6 @@ def latest_snapshot_map(
     }
 
 
-def latest_value_cents_map(account_ids: list[int] | None = None) -> dict[int, int]:
-    """Return {account_id: latest market value_cents} (loan ignored)."""
-    return {
-        account_id: value
-        for account_id, (value, _loan) in latest_snapshot_map(account_ids).items()
-    }
-
-
 def net_worth_impact_cents(account: Account, value_cents: int, loan_cents: int | None) -> int:
     """Signed net-worth contribution for one account's latest snapshot."""
     if account.account_type.classification == Classification.liability:

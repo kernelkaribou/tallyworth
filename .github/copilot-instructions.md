@@ -13,8 +13,13 @@ net worth figure, charts, and a per-timeframe net worth change summary.
 
 - Single-user, self-hosted. No authentication in alpha.
 - Single currency. Display symbol configured via `CURRENCY_SYMBOL` (default `$`).
-- `SECRET_KEY`: the factory currently WARNS when unset/default. Tighten `_check_secret_key` in
-  `app/__init__.py` to raise (hard fail outside tests) BEFORE adding sessions/auth/flash/CSRF.
+- `SECRET_KEY`: the factory HARD FAILS (raises `RuntimeError`) when the key is unset or set to
+  the insecure default outside of tests; supply a strong `SECRET_KEY` to run. See `_check_secret_key`
+  in `app/__init__.py`.
+- Security headers: `_register_security_headers` in `app/__init__.py` adds `X-Content-Type-Options`,
+  `X-Frame-Options`, `Referrer-Policy`, and a CSP. Inline `<script>` blocks (theme bootstrap, theme
+  toggle, account-form loan reveal) carry a per-request `nonce="{{ csp_nonce }}"`; add the nonce to
+  any new inline script or it will be blocked.
 - CSRF: all state-changing POST forms are protected by Flask-WTF `CSRFProtect` (initialised in
   `app/__init__.py`). Every form includes `{{ csrf_field() }}` (macro in `_macros.html`). Tests
   disable it via `TestConfig.WTF_CSRF_ENABLED = False`; `tests/test_csrf.py` covers enforcement.

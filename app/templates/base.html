@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Tallyworth{% endblock %}</title>
-    <script>
+    <script nonce="{{ csp_nonce }}">
       // Apply the saved theme before paint to avoid a flash of the wrong theme.
       (function () {
         try {
@@ -155,7 +155,7 @@
         </div>
       </div>
     </div>
-    <script>
+    <script nonce="{{ csp_nonce }}">
       (function () {
         var btn = document.getElementById("theme-toggle");
         if (!btn) return;

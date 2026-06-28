@@ -31,9 +31,5 @@ class AccountType(db.Model):
 
     accounts = db.relationship("Account", back_populates="account_type")
 
-    @property
-    def is_asset(self) -> bool:
-        return self.classification == Classification.asset
-
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         return f"<AccountType {self.name} ({self.classification.value})>"

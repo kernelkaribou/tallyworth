@@ -125,7 +125,7 @@
 
 {% block scripts %}
 {% if not editing %}
-<script>
+<script nonce="{{ csp_nonce }}">
   (function () {
     var select = document.getElementById("account_type_id");
     var loanWrap = document.getElementById("initial-loan-wrap");

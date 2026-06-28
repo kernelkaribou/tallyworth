@@ -69,7 +69,7 @@ Tallyworth is configured through environment variables:
 
 | Variable              | Required | Default                         | Description                                               |
 | --------------------- | -------- | ------------------------------- | --------------------------------------------------------- |
-| `SECRET_KEY`          | Yes      | (insecure dev default)          | Random secret used to secure the app. Set a strong value. |
+| `SECRET_KEY`          | Yes      | none (startup fails without it) | Random secret used to secure the app. The app refuses to start if this is unset or left at the insecure default. |
 | `DEFAULT_CURRENCY`    | No       | `USD`                           | ISO currency code (USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SEK, NZD, ZAR). Sets the symbol shown next to amounts. Unknown codes fall back to USD. |
 | `CURRENCY_SYMBOL`     | No       | (from `DEFAULT_CURRENCY`)       | Optional raw symbol override for a currency not in the list. Takes precedence over `DEFAULT_CURRENCY`. |
 | `DATABASE_URL`        | No       | SQLite file in the data dir     | SQLAlchemy database URL, if you want a different store.    |

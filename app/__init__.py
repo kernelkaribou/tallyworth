@@ -1,9 +1,10 @@
 """Application factory for Tallyworth."""
 from __future__ import annotations
 
+import secrets
 from pathlib import Path
 
-from flask import Flask
+from flask import Flask, g
 
 from .config import Config
 from .extensions import csrf, db, migrate
@@ -35,8 +36,45 @@ def create_app(config_object: type[Config] | Config = Config) -> Flask:
     app.register_blueprint(cashflow_bp)
 
     _register_currency(app)
+    _register_security_headers(app)
 
     return app
+
+
+def _register_security_headers(app: Flask) -> None:
+    """Attach defence-in-depth response headers, including a CSP.
+
+    A per-request nonce is generated for the handful of inline <script> blocks
+    (the pre-paint theme bootstrap, the theme toggle, and the account form's
+    loan-field reveal) so the Content-Security-Policy can forbid arbitrary
+    inline script while still allowing those trusted snippets.
+    """
+
+    @app.before_request
+    def _set_csp_nonce() -> None:
+        g.csp_nonce = secrets.token_urlsafe(16)
+
+    @app.context_processor
+    def _inject_csp_nonce() -> dict:
+        return {"csp_nonce": getattr(g, "csp_nonce", "")}
+
+    @app.after_request
+    def _security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        nonce = getattr(g, "csp_nonce", "")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; "
+            f"script-src 'self' 'nonce-{nonce}'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "base-uri 'none'; "
+            "frame-ancestors 'none'; "
+            "object-src 'none'",
+        )
+        return response
 
 
 def _register_currency(app: Flask) -> None:
@@ -75,16 +113,16 @@ def _ensure_data_dir(app: Flask) -> None:
 
 
 def _check_secret_key(app: Flask) -> None:
-    """Warn loudly when running on an unset or insecure default secret key.
+    """Refuse to run on an unset or insecure default secret key.
 
-    To be tightened to a hard failure once sessions/auth land (see
-    copilot-instructions.md).
+    The test suite (TESTING) is exempt so fixtures need not supply one.
     """
     if app.config.get("TESTING"):
         return
     insecure = app.config.get("INSECURE_SECRET_KEY", "dev-insecure-change-me")
     if app.config.get("SECRET_KEY") in (None, "", insecure):
-        app.logger.warning(
-            "SECRET_KEY is unset or using the insecure default. "
-            "Set a strong SECRET_KEY before enabling sessions or authentication."
+        raise RuntimeError(
+            "SECRET_KEY is unset or using the insecure default. Set a strong "
+            "SECRET_KEY (for example via the SECRET_KEY environment variable) "
+            "before starting Tallyworth."
         )
