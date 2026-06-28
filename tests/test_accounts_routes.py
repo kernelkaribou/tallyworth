@@ -174,3 +174,81 @@ def test_dashboard_shows_net_worth(app, client):
     resp = client.get("/")
     assert resp.status_code == 200
     assert b"$800.00" in resp.data
+
+
+def test_edit_account_form_renders(app, client):
+    with app.app_context():
+        checking = _type_id("Checking")
+    client.post(
+        "/accounts",
+        data={"name": "Old Name", "account_type_id": checking, "initial_value": "100"},
+        follow_redirects=True,
+    )
+    with app.app_context():
+        account_id = Account.query.filter_by(name="Old Name").one().id
+    resp = client.get(f"/accounts/{account_id}/edit")
+    assert resp.status_code == 200
+    assert b"Old Name" in resp.data
+
+
+def test_update_account_renames_and_changes_type(app, client):
+    with app.app_context():
+        checking = _type_id("Checking")
+        savings = _type_id("Savings")
+    client.post(
+        "/accounts",
+        data={"name": "Rename Me", "account_type_id": checking, "initial_value": "100"},
+        follow_redirects=True,
+    )
+    with app.app_context():
+        account_id = Account.query.filter_by(name="Rename Me").one().id
+    resp = client.post(
+        f"/accounts/{account_id}/edit",
+        data={"name": "Renamed", "account_type_id": savings},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+    with app.app_context():
+        account = db.session.get(Account, account_id)
+        assert account.name == "Renamed"
+        assert account.account_type.name == "Savings"
+
+
+def test_update_account_requires_name(app, client):
+    with app.app_context():
+        checking = _type_id("Checking")
+    client.post(
+        "/accounts",
+        data={"name": "Keep", "account_type_id": checking, "initial_value": "100"},
+        follow_redirects=True,
+    )
+    with app.app_context():
+        account_id = Account.query.filter_by(name="Keep").one().id
+    resp = client.post(
+        f"/accounts/{account_id}/edit",
+        data={"name": "", "account_type_id": checking},
+    )
+    assert resp.status_code == 400
+    assert b"required" in resp.data
+    with app.app_context():
+        assert db.session.get(Account, account_id).name == "Keep"
+
+
+def test_custom_type_requires_name(app, client):
+    resp = client.post(
+        "/account-types",
+        data={"name": "  ", "classification": "asset"},
+        follow_redirects=True,
+    )
+    assert b"name is required" in resp.data.lower()
+
+
+def test_custom_type_rejects_invalid_classification(app, client):
+    resp = client.post(
+        "/account-types",
+        data={"name": "Weird", "classification": "nonsense"},
+        follow_redirects=True,
+    )
+    assert b"valid classification" in resp.data.lower()
+    with app.app_context():
+        assert AccountType.query.filter_by(name="Weird").first() is None

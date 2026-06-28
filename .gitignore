@@ -13,3 +13,7 @@ app/static/css/style.css
 dist/
 build/
 .pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
