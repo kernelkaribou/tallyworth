@@ -19,11 +19,9 @@ from app.money import MoneyError, parse_money_to_cents
 from app.models.account import Account, AccountValue
 from app.models.account_type import AccountType, Classification
 from app.services.networth import (
-    NetWorthPoint,
     display_value_map,
     latest_snapshot_map,
     net_worth_impact_cents,
-    project_net_worth,
 )
 
 bp = Blueprint("accounts", __name__)
@@ -112,27 +110,15 @@ def account_detail(account_id: int):
         }
         for v in ordered
     ]
-    series = [
-        NetWorthPoint(recorded_at=v.recorded_at, net_cents=_impact_cents(v))
-        for v in ordered
-    ]
-    projection_points = [
-        {
-            "x": int(p.recorded_at.replace(tzinfo=timezone.utc).timestamp() * 1000),
-            "y": p.net_cents / 100,
-        }
-        for p in project_net_worth(series)
-    ]
     # Show a zero baseline whenever the impact series dips below zero (any
     # liability, or a financed asset that is currently underwater) so the line
     # clearly reads as rising toward zero.
-    show_baseline = any(p["y"] < 0 for p in chart_points + projection_points)
+    show_baseline = any(p["y"] < 0 for p in chart_points)
     return render_template(
         "accounts/detail.html",
         account=account,
         history=history,
         chart_points=chart_points,
-        projection_points=projection_points,
         show_baseline=show_baseline,
     )
 

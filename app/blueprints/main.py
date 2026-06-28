@@ -14,7 +14,6 @@ from app.services.networth import (
     display_value_map,
     latest_snapshot_map,
     net_worth_series,
-    project_net_worth,
 )
 
 bp = Blueprint("main", __name__)
@@ -41,13 +40,6 @@ def index():
         }
         for p in series
     ]
-    projection_points = [
-        {
-            "x": int(p.recorded_at.replace(tzinfo=timezone.utc).timestamp() * 1000),
-            "y": p.net_cents / 100,
-        }
-        for p in project_net_worth(series)
-    ]
     return render_template(
         "index.html",
         summary=summary,
@@ -56,7 +48,6 @@ def index():
         trends=trends,
         active_count=len(active_accounts),
         chart_points=chart_points,
-        projection_points=projection_points,
         cashflow=cashflow_summary(),
     )
 

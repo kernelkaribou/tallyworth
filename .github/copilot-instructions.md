@@ -7,7 +7,7 @@ Maintain this file as the durable development context for the project.
 A simple personal NET WORTH tracker. It is a "pretty Excel sheet" as a webpage, NOT a budgeting
 or transactions tool. Accounts hold a running time series of values (latest value is current).
 There is a light income-vs-expense green/red cashflow indicator, asset/equity tracking, a total
-net worth figure, charts, and a conservative trend projection for accounts.
+net worth figure, charts, and a per-timeframe net worth change summary.
 
 ## Core product decisions
 

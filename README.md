@@ -24,11 +24,10 @@ in full control of the numbers you enter.
 - **Track equity on financed assets.** For things like a house or a car, record
   both the market value and the outstanding loan. Tallyworth counts the equity
   (value minus loan) toward your net worth.
-- **See your history.** Every account has its own value-over-time chart, and the
-  dashboard shows your total net worth over time.
-- **View a trend estimate.** Once you have enough history, the dashboard adds a
-  conservative dashed trend line. It is a simple past-trend estimate, not a
-  forecast or financial advice.
+- **See how you're trending.** Every account has its own value-over-time chart,
+  and the dashboard shows your total net worth over time. Pick a timeframe
+  (1M, 3M, 1Y, YTD, 3Y, 5Y, or lifetime) and Tallyworth summarizes how much your
+  net worth went up or down over that period.
 - **Note your monthly cash flow.** Record recurring monthly income and expenses
   to see whether your month is in the green or the red. This is informational
   only and does not affect your net worth.
@@ -129,7 +128,6 @@ or behind your own access controls.
 
 AI was used heavily to create this project.
 
-Tallyworth is provided as-is for personal tracking. It is not financial advice,
-and any trend estimates it shows are simple extrapolations of the numbers you
-enter, not predictions. Always keep your own records and verify important
-figures yourself.
+Tallyworth is provided as-is for personal tracking. It is not financial advice.
+Any figures and summaries it shows are based solely on the numbers you enter.
+Always keep your own records and verify important figures yourself.

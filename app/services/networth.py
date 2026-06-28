@@ -7,8 +7,7 @@ Archived accounts are excluded from the current figure.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from statistics import median
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
@@ -320,95 +319,3 @@ def net_worth_series(accounts: list[Account] | None = None) -> list[NetWorthPoin
         else:
             collapsed.append(point)
     return collapsed
-
-
-# Guardrails for the trend projection. Kept deliberately conservative: a short,
-# clearly-dashed estimate from a robust slope, not a long speculative forecast.
-PROJECTION_MIN_POINTS = 3
-# Require a real stretch of history (not just three rapid updates) before
-# extrapolating, and never project further ahead than we have looked back.
-PROJECTION_MIN_SPAN_DAYS = 30
-PROJECTION_MAX_HORIZON_DAYS = 180
-# Suppress the projection when extrapolating would land more than this multiple
-# of the observed net-worth range away from the latest value (runaway slope).
-PROJECTION_MAX_RANGE_MULTIPLE = 3
-_DAY_SECONDS = 86400
-
-
-def _epoch_seconds(dt: datetime) -> float:
-    """Epoch seconds for a naive-UTC datetime (matches the chart's x convention)."""
-    return dt.replace(tzinfo=timezone.utc).timestamp()
-
-
-def _theil_sen_slope(xs: list[float], ys: list[float]) -> float | None:
-    """Median of all pairwise slopes (Theil-Sen estimator).
-
-    This is robust to outliers, so a single large jump (e.g. adding an existing
-    account for the first time) or a cluster of rapid updates does not dominate
-    the trend the way an ordinary least-squares fit would. Returns ``None`` when
-    no pair has a distinct x value.
-    """
-    slopes: list[float] = []
-    n = len(xs)
-    for i in range(n):
-        for j in range(i + 1, n):
-            dx = xs[j] - xs[i]
-            if dx != 0:
-                slopes.append((ys[j] - ys[i]) / dx)
-    if not slopes:
-        return None
-    return median(slopes)
-
-
-def project_net_worth(points: list[NetWorthPoint]) -> list[NetWorthPoint]:
-    """Return a short trend projection extending the historical series.
-
-    A robust (Theil-Sen median) slope is fitted to the historical net-worth
-    points and carried forward from the most recent actual point. The projection
-    is intentionally conservative:
-
-    * it requires at least ``PROJECTION_MIN_POINTS`` real points spanning at
-      least ``PROJECTION_MIN_SPAN_DAYS`` of history;
-    * it uses a median-of-pairwise-slopes estimator so a single jump or a burst
-      of updates cannot dominate the trend;
-    * it is anchored to the latest actual value (so the dashed line connects to
-      the solid line with no jump);
-    * the horizon never exceeds the observed history span and is capped at
-      ``PROJECTION_MAX_HORIZON_DAYS``;
-    * a runaway extrapolation (more than ``PROJECTION_MAX_RANGE_MULTIPLE`` times
-      the observed range away from the latest value) is suppressed entirely.
-
-    The result is a two-point list (anchor + future endpoint) suitable for
-    drawing a dashed continuation, or an empty list when the data is too sparse,
-    too short, or would produce an implausible projection.
-    """
-    if len(points) < PROJECTION_MIN_POINTS:
-        return []
-
-    xs = [_epoch_seconds(p.recorded_at) for p in points]
-    ys = [float(p.net_cents) for p in points]
-    span = xs[-1] - xs[0]
-    if span < PROJECTION_MIN_SPAN_DAYS * _DAY_SECONDS:
-        return []
-
-    slope = _theil_sen_slope(xs, ys)
-    if slope is None:
-        return []
-
-    horizon = min(span, PROJECTION_MAX_HORIZON_DAYS * _DAY_SECONDS)
-
-    last_x = xs[-1]
-    last_y = points[-1].net_cents
-    end_x = last_x + horizon
-    end_y = round(last_y + slope * horizon)
-
-    value_range = max(ys) - min(ys)
-    if value_range > 0 and abs(end_y - last_y) > PROJECTION_MAX_RANGE_MULTIPLE * value_range:
-        return []
-
-    end_dt = datetime.fromtimestamp(end_x, tz=timezone.utc).replace(tzinfo=None)
-
-    return [
-        NetWorthPoint(recorded_at=points[-1].recorded_at, net_cents=last_y),
-        NetWorthPoint(recorded_at=end_dt, net_cents=end_y),
-    ]

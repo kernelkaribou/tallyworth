@@ -1,10 +1,12 @@
 // Renders value-over-time line charts with Chart.js.
 //
 // Each chart is a <canvas> with:
-//   data-chart-source : id of a <script type="application/json"> holding an
-//                       array of {x: epoch_ms, y: value} points
-//   data-symbol       : currency symbol for axis/tooltip formatting (default $)
-//   data-label        : dataset label (default "Value")
+//   data-chart-source   : id of a <script type="application/json"> holding an
+//                         array of {x: epoch_ms, y: value} points
+//   data-symbol         : currency symbol for axis/tooltip formatting (default $)
+//   data-label          : dataset label (default "Value")
+//   data-summary-target : optional id of an element to fill with a plain-language
+//                         change summary for the currently selected timeframe
 //
 // A linear epoch-millisecond x-axis is used with manual UTC date formatting so
 // no Chart.js date adapter is required. Dates are rendered in UTC to match the
@@ -15,6 +17,7 @@
   }
 
   var instances = [];
+  var DAY_MS = 86400000;
 
   function isDark() {
     return document.documentElement.classList.contains("dark");
@@ -25,7 +28,6 @@
       return {
         line: "#e2e8f0",
         fill: "rgba(226, 232, 240, 0.08)",
-        projection: "#94a3b8",
         text: "#94a3b8",
         grid: "rgba(148, 163, 184, 0.15)",
         zero: "rgba(148, 163, 184, 0.55)",
@@ -34,11 +36,20 @@
     return {
       line: "#0f172a",
       fill: "rgba(15, 23, 42, 0.08)",
-      projection: "#64748b",
       text: "#475569",
       grid: "rgba(148, 163, 184, 0.2)",
       zero: "rgba(100, 116, 139, 0.55)",
     };
+  }
+
+  function formatMoney(symbol, value) {
+    return (
+      symbol +
+      Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    );
   }
 
   // Draws a solid horizontal line at y = 0 so liabilities (plotted as negative
@@ -80,27 +91,16 @@
     if (!points || points.length === 0) {
       return;
     }
-    var projection = null;
-    if (canvas.dataset.projectionSource) {
-      var projEl = document.getElementById(canvas.dataset.projectionSource);
-      if (projEl) {
-        try {
-          var parsed = JSON.parse(projEl.textContent);
-          if (parsed && parsed.length > 0) {
-            projection = parsed;
-          }
-        } catch (e) {
-          projection = null;
-        }
-      }
-    }
     instances.push({
       canvas: canvas,
       points: points,
-      projection: projection,
-      projIndex: projection ? 1 : null,
+      symbol: canvas.dataset.symbol || "$",
+      label: canvas.dataset.label || "Value",
+      summaryEl: canvas.dataset.summaryTarget
+        ? document.getElementById(canvas.dataset.summaryTarget)
+        : null,
       range: canvas.dataset.defaultRange || "lifetime",
-      chart: renderChart(canvas, points, projection),
+      chart: renderChart(canvas, points),
     });
   });
 
@@ -120,10 +120,10 @@
         applyRange(inst);
       });
     });
-    applyRange(inst);
   });
 
-  var DAY_MS = 86400000;
+  // Initial paint: set each chart's axis window and summary for its range.
+  instances.forEach(applyRange);
 
   // Translate a timeframe key into the earliest x (epoch ms) to display, or
   // undefined for "lifetime" (show all history). Clamped to the first data
@@ -144,10 +144,8 @@
     return Math.max(minX, firstX);
   }
 
-  // Apply the instance's selected timeframe to its chart by zooming the x-axis.
-  // The projection (dashed future line) is only shown when the visible history
-  // window is at least as long as the projection horizon, so a short range
-  // never gets dominated by a disproportionately long forward estimate.
+  // Apply the instance's selected timeframe to its chart by zooming the x-axis,
+  // then refresh the change summary for the visible window.
   function applyRange(inst) {
     if (!inst.chart) return;
     var range = inst.range || "lifetime";
@@ -157,57 +155,100 @@
     if (minX !== undefined && minX >= lastActual) minX = points[0].x;
     var startX = minX === undefined ? points[0].x : minX;
 
-    var showProjection = false;
-    if (inst.projIndex !== null && inst.projection && inst.projection.length) {
-      var horizon =
-        inst.projection[inst.projection.length - 1].x - inst.projection[0].x;
-      showProjection = lastActual - startX >= horizon;
-      inst.chart.setDatasetVisibility(inst.projIndex, showProjection);
-    }
-
-    var maxX;
-    if (range === "lifetime") {
-      maxX = undefined;
-    } else if (showProjection) {
-      maxX = inst.projection[inst.projection.length - 1].x;
-    } else {
-      maxX = lastActual;
-    }
-
     inst.chart.options.scales.x.min = minX;
-    inst.chart.options.scales.x.max = maxX;
+    inst.chart.options.scales.x.max = range === "lifetime" ? undefined : lastActual;
     inst.chart.update();
+
+    updateSummary(inst, range, startX);
   }
 
-  function renderChart(canvas, points, projection) {
+  // Human-readable phrase for the period covered by a timeframe key.
+  function periodLabel(range) {
+    switch (range) {
+      case "1m": return "the past month";
+      case "3m": return "the past 3 months";
+      case "1y": return "the past year";
+      case "ytd": return "year to date";
+      case "3y": return "the past 3 years";
+      case "5y": return "the past 5 years";
+      default: return "all time";
+    }
+  }
+
+  // Fill the instance's summary element with the net change across the visible
+  // window: first vs last actual point. Percentage is shown only when the
+  // starting value is positive (a percent change off zero or a negative
+  // liability impact would be meaningless).
+  function updateSummary(inst, range, startX) {
+    if (!inst.summaryEl) return;
+    var visible = inst.points.filter(function (p) {
+      return p.x >= startX;
+    });
+    if (visible.length < 2) {
+      inst.summaryEl.textContent =
+        "Not enough data to show the change over " + periodLabel(range) + ".";
+      return;
+    }
+    var first = visible[0];
+    var last = visible[visible.length - 1];
+    var delta = last.y - first.y;
+    var symbol = inst.symbol;
+
+    var toneClass;
+    if (delta > 0) {
+      toneClass = "text-emerald-600 dark:text-emerald-400";
+    } else if (delta < 0) {
+      toneClass = "text-red-600 dark:text-red-400";
+    } else {
+      toneClass = "text-slate-500 dark:text-slate-400";
+    }
+
+    var changeText;
+    if (delta === 0) {
+      changeText = "unchanged";
+    } else {
+      changeText = (delta > 0 ? "up " : "down ") + formatMoney(symbol, Math.abs(delta));
+      if (first.y > 0) {
+        var pct = (delta / first.y) * 100;
+        changeText +=
+          " (" + (delta > 0 ? "+" : "-") + Math.abs(pct).toFixed(1) + "%)";
+      }
+    }
+
+    var changeSpan = document.createElement("span");
+    changeSpan.className = "font-medium " + toneClass;
+    changeSpan.textContent = changeText;
+
+    inst.summaryEl.textContent = inst.label + " ";
+    inst.summaryEl.appendChild(changeSpan);
+    inst.summaryEl.appendChild(
+      document.createTextNode(
+        " over " +
+          periodLabel(range) +
+          " \u00b7 " +
+          formatMoney(symbol, first.y) +
+          " \u2192 " +
+          formatMoney(symbol, last.y)
+      )
+    );
+  }
+
+  function renderChart(canvas, points) {
     var symbol = canvas.dataset.symbol || "$";
     var label = canvas.dataset.label || "Value";
-    var projectionLabel = canvas.dataset.projectionLabel || "Projected";
     var colors = theme();
     var baseline = canvas.dataset.baseline === "zero";
 
     var yMin = null;
     var yMax = null;
     if (baseline) {
-      var all = points.slice();
-      if (projection) all = all.concat(projection);
-      all.forEach(function (p) {
+      points.forEach(function (p) {
         if (yMin === null || p.y < yMin) yMin = p.y;
         if (yMax === null || p.y > yMax) yMax = p.y;
       });
       // Always keep zero within view so the baseline is meaningful.
       yMin = Math.min(0, yMin === null ? 0 : yMin);
       yMax = Math.max(0, yMax === null ? 0 : yMax);
-    }
-
-    function formatMoney(value) {
-      return (
-        symbol +
-        Number(value).toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      );
     }
 
     var datasets = [
@@ -223,21 +264,6 @@
         pointHoverRadius: 5,
       },
     ];
-
-    if (projection) {
-      datasets.push({
-        label: projectionLabel,
-        data: projection,
-        borderColor: colors.projection,
-        backgroundColor: "transparent",
-        borderWidth: 2,
-        borderDash: [6, 6],
-        tension: 0,
-        fill: false,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-      });
-    }
 
     return new Chart(canvas, {
       type: "line",
@@ -270,7 +296,7 @@
             ticks: {
               color: colors.text,
               callback: function (value) {
-                return formatMoney(value);
+                return formatMoney(symbol, value);
               },
             },
             grid: { color: colors.grid },
@@ -278,9 +304,7 @@
         },
         plugins: {
           legend: {
-            display: !!projection,
-            position: "bottom",
-            labels: { color: colors.text },
+            display: false,
           },
           tooltip: {
             callbacks: {
@@ -290,7 +314,7 @@
                 });
               },
               label: function (ctx) {
-                return formatMoney(ctx.parsed.y);
+                return formatMoney(symbol, ctx.parsed.y);
               },
             },
           },
@@ -306,7 +330,7 @@
         if (inst.chart) {
           inst.chart.destroy();
         }
-        inst.chart = renderChart(inst.canvas, inst.points, inst.projection);
+        inst.chart = renderChart(inst.canvas, inst.points);
         applyRange(inst);
       });
     },

@@ -54,7 +54,7 @@
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h2 class="flex items-center gap-2 text-lg font-semibold">
       Net Worth Summary
-      {{ info_tooltip("Based on active accounts only." ~ (" The dashed line is a simple past-trend estimate, not financial advice or a guarantee." if projection_points else "")) }}
+      {{ info_tooltip("Based on active accounts only.") }}
     </h2>
     <div id="networth-timeframe" class="flex flex-wrap items-center gap-1">
       <button type="button" class="timeframe-btn" data-range="1m">1M</button>
@@ -66,6 +66,7 @@
       <button type="button" class="timeframe-btn" data-range="lifetime">Lifetime</button>
     </div>
   </div>
+  <p id="networth-summary" class="mt-2 text-sm text-slate-500 dark:text-slate-400"></p>
   <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
     <div class="h-72">
       <canvas
@@ -73,17 +74,13 @@
         data-chart-source="networth-data"
         data-timeframe-control="networth-timeframe"
         data-default-range="1y"
-        {% if projection_points %}data-projection-source="networth-projection"
-        data-projection-label="Projected trend"{% endif %}
+        data-summary-target="networth-summary"
         data-symbol="{{ currency_symbol }}"
         data-label="Net worth"
       ></canvas>
     </div>
   </div>
   <script id="networth-data" type="application/json">{{ chart_points | tojson }}</script>
-  {% if projection_points %}
-  <script id="networth-projection" type="application/json">{{ projection_points | tojson }}</script>
-  {% endif %}
 </section>
 {% endif %}
 
