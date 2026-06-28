@@ -59,3 +59,15 @@ def test_money_filter_uses_resolved_symbol():
         from flask import render_template_string
 
         assert render_template_string("{{ 123456 | money }}") == "\u00a31,234.56"
+
+
+def test_money_filter_puts_sign_before_symbol():
+    # A negative amount (e.g. an underwater equity or negative net worth) should
+    # read as "-$50.00", not "$-50.00".
+    app = create_app(TestConfig)
+    with app.test_request_context():
+        from flask import render_template_string
+
+        assert render_template_string("{{ -5000 | money }}") == "-$50.00"
+        assert render_template_string("{{ 0 | money }}") == "$0.00"
+

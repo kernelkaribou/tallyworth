@@ -18,7 +18,7 @@
           value="{{ entry.name }}"
           required
           aria-label="{{ entry.kind.value | capitalize }} name"
-          class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm"
+          class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
         <input
           type="text"
@@ -27,7 +27,7 @@
           inputmode="decimal"
           required
           aria-label="{{ entry.kind.value | capitalize }} amount"
-          class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums {{ accent }}"
+          class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums focus:border-slate-500 focus:outline-none dark:bg-slate-900 {{ accent }}"
         />
         <button
           type="submit"
@@ -76,7 +76,7 @@
     placeholder="{{ label }} name"
     required
     aria-label="{{ label }} name"
-    class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm"
+    class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
   />
   <input
     type="text"
@@ -85,7 +85,7 @@
     inputmode="decimal"
     required
     aria-label="{{ label }} amount"
-    class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums"
+    class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
   />
   <button
     type="submit"

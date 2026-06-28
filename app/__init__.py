@@ -57,7 +57,8 @@ def _register_currency(app: Flask) -> None:
     def _money(cents: int | None) -> str:
         if cents is None:
             return "-"
-        return f"{symbol}{cents / 100:,.2f}"
+        sign = "-" if cents < 0 else ""
+        return f"{sign}{symbol}{abs(cents) / 100:,.2f}"
 
     @app.context_processor
     def _inject_currency() -> dict:

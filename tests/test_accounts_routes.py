@@ -35,6 +35,23 @@ def test_create_account_requires_name(app, client):
         assert Account.query.count() == 0
 
 
+def test_failed_create_preserves_selected_type(app, client):
+    with app.app_context():
+        savings = _type_id("Savings")
+    resp = client.post(
+        "/accounts",
+        data={"name": "", "account_type_id": savings, "initial_value": "50"},
+    )
+    assert resp.status_code == 400
+    body = resp.data.decode()
+    # The chosen type stays selected so the user does not have to re-pick it.
+    start = body.index(f'value="{savings}"')
+    end = body.index("</option>", start)
+    assert "selected" in body[start:end]
+    # The entered starting value is preserved too.
+    assert 'value="50"' in body
+
+
 def test_create_account_rejects_bad_money(app, client):
     with app.app_context():
         checking = _type_id("Checking")

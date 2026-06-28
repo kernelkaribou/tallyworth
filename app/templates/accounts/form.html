@@ -48,14 +48,14 @@
         required
         class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
       >
-        <option value="" disabled {% if not editing %}selected{% endif %}>
+        <option value="" disabled {% if not editing and not request.form.get('account_type_id') %}selected{% endif %}>
           Choose a type
         </option>
         {% for t in account_types %}
         <option
           value="{{ t.id }}"
           data-tracks-loan="{{ 't' if t.tracks_loan else 'f' }}"
-          {% if editing and account.account_type_id == t.id %}selected{% endif %}
+          {% if (editing and account.account_type_id == t.id) or (not editing and request.form.get('account_type_id') == t.id|string) %}selected{% endif %}
         >
           {{ t.name }} ({{ t.classification.value }})
         </option>
