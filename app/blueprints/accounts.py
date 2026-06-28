@@ -5,6 +5,7 @@ from datetime import timezone
 
 from flask import (
     Blueprint,
+    abort,
     flash,
     redirect,
     render_template,
@@ -187,6 +188,52 @@ def add_value(account_id: int):
     return redirect(url_for("accounts.account_detail", account_id=account.id))
 
 
+def _get_owned_value(account_id: int, value_id: int) -> tuple[Account, AccountValue]:
+    """Fetch an account and one of its values, 404ing on mismatch."""
+    account = db.get_or_404(Account, account_id)
+    value = db.get_or_404(AccountValue, value_id)
+    if value.account_id != account.id:
+        abort(404)
+    return account, value
+
+
+@bp.get("/accounts/<int:account_id>/values/<int:value_id>/edit")
+def edit_value(account_id: int, value_id: int):
+    account, value = _get_owned_value(account_id, value_id)
+    return render_template("accounts/value_form.html", account=account, value=value)
+
+
+@bp.post("/accounts/<int:account_id>/values/<int:value_id>/edit")
+def update_value(account_id: int, value_id: int):
+    account, value = _get_owned_value(account_id, value_id)
+    cents, loan_cents, error = _parse_value_loan(
+        account,
+        request.form.get("value"),
+        request.form.get("loan"),
+        required=True,
+    )
+    if error:
+        flash(error, "error")
+        return (
+            render_template("accounts/value_form.html", account=account, value=value),
+            400,
+        )
+    value.value_cents = cents
+    value.loan_cents = loan_cents
+    db.session.commit()
+    flash("Value updated.", "success")
+    return redirect(url_for("accounts.account_detail", account_id=account.id))
+
+
+@bp.post("/accounts/<int:account_id>/values/<int:value_id>/delete")
+def delete_value(account_id: int, value_id: int):
+    account, value = _get_owned_value(account_id, value_id)
+    db.session.delete(value)
+    db.session.commit()
+    flash("Value deleted.", "success")
+    return redirect(url_for("accounts.account_detail", account_id=account.id))
+
+
 @bp.post("/accounts/<int:account_id>/archive")
 def toggle_archive(account_id: int):
     account = db.get_or_404(Account, account_id)
@@ -242,16 +289,18 @@ def create_account_type():
     return redirect(url_for("accounts.list_account_types"))
 
 
-def _maybe_add_value(
+def _parse_value_loan(
     account: Account,
     raw_value: str | None,
-    raw_loan: str | None = None,
-    required: bool = False,
-) -> str | None:
-    """Add a value snapshot from raw money strings. Returns an error message or None.
+    raw_loan: str | None,
+    required: bool,
+) -> tuple[int | None, int | None, str | None]:
+    """Parse and validate a value (and loan) from raw money strings.
 
-    For loan-tracking accounts a non-negative loan balance is required alongside
-    the market value (enter 0 if the asset is owned outright).
+    Returns ``(value_cents, loan_cents, error)``. ``value_cents`` is None when no
+    value was supplied and one was not required (the caller should then do
+    nothing). For loan-tracking accounts a non-negative loan balance is required
+    alongside the market value (enter 0 if the asset is owned outright).
     """
     if raw_value is None or raw_value.strip() == "":
         if (
@@ -259,30 +308,45 @@ def _maybe_add_value(
             and raw_loan is not None
             and raw_loan.strip() != ""
         ):
-            return "Enter a market value to go with the loan balance."
-        return "A value is required." if required else None
+            return None, None, "Enter a market value to go with the loan balance."
+        return None, None, ("A value is required." if required else None)
     try:
         cents = parse_money_to_cents(raw_value)
     except MoneyError as exc:
-        return str(exc)
+        return None, None, str(exc)
     if (
         account.account_type.classification == Classification.liability
         and cents < 0
     ):
-        return "Enter the amount owed as a positive number."
+        return None, None, "Enter the amount owed as a positive number."
     if account.account_type.tracks_loan and cents < 0:
-        return "Market value cannot be negative."
+        return None, None, "Market value cannot be negative."
 
     loan_cents: int | None = None
     if account.account_type.tracks_loan:
         if raw_loan is None or raw_loan.strip() == "":
-            return "A loan balance is required (enter 0 if owned outright)."
+            return None, None, "A loan balance is required (enter 0 if owned outright)."
         try:
             loan_cents = parse_money_to_cents(raw_loan)
         except MoneyError as exc:
-            return str(exc)
+            return None, None, str(exc)
         if loan_cents < 0:
-            return "Loan balance cannot be negative."
+            return None, None, "Loan balance cannot be negative."
 
+    return cents, loan_cents, None
+
+
+def _maybe_add_value(
+    account: Account,
+    raw_value: str | None,
+    raw_loan: str | None = None,
+    required: bool = False,
+) -> str | None:
+    """Add a value snapshot from raw money strings. Returns an error message or None."""
+    cents, loan_cents, error = _parse_value_loan(account, raw_value, raw_loan, required)
+    if error:
+        return error
+    if cents is None:
+        return None
     account.values.append(AccountValue(value_cents=cents, loan_cents=loan_cents))
     return None

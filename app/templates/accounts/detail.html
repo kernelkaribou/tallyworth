@@ -159,6 +159,7 @@
           {% else %}
           <th class="px-4 py-3 text-right font-medium">{% if is_liability %}Balance owed{% else %}Value{% endif %}</th>
           {% endif %}
+          <th class="px-4 py-3 text-right font-medium">Actions</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
@@ -174,6 +175,20 @@
           {% else %}
           <td class="px-4 py-3 text-right tabular-nums {% if is_liability %}text-red-600 dark:text-red-400{% endif %}">{{ v.value_cents | money }}</td>
           {% endif %}
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            <a
+              href="{{ url_for('accounts.edit_value', account_id=account.id, value_id=v.id) }}"
+              class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >Edit</a>
+            <form
+              method="post"
+              action="{{ url_for('accounts.delete_value', account_id=account.id, value_id=v.id) }}"
+              class="ml-3 inline"
+              onsubmit="return confirm('Delete this value? This cannot be undone.');"
+            >
+              <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">Delete</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
