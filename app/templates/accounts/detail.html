@@ -115,12 +115,20 @@
       <canvas
         id="account-history-chart"
         data-chart-source="account-history-data"
+        {% if projection_points %}data-projection-source="account-history-projection"
+        data-projection-label="Projected trend"{% endif %}
         data-symbol="{{ currency_symbol }}"
         data-label="{% if account.tracks_loan %}Equity{% else %}Value{% endif %}"
       ></canvas>
     </div>
   </div>
+  {% if projection_points %}
+  <p class="mt-2 text-xs text-slate-500">The dashed line is a simple past-trend estimate, not financial advice or a guarantee.</p>
+  {% endif %}
   <script id="account-history-data" type="application/json">{{ chart_points | tojson }}</script>
+  {% if projection_points %}
+  <script id="account-history-projection" type="application/json">{{ projection_points | tojson }}</script>
+  {% endif %}
   <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <table class="w-full text-sm">
       <thead class="bg-slate-50 text-left text-slate-500">

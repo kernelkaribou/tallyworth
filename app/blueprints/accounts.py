@@ -17,7 +17,12 @@ from app.extensions import db
 from app.money import MoneyError, parse_money_to_cents
 from app.models.account import Account, AccountValue
 from app.models.account_type import AccountType, Classification
-from app.services.networth import display_value_map, latest_snapshot_map
+from app.services.networth import (
+    NetWorthPoint,
+    display_value_map,
+    latest_snapshot_map,
+    project_net_worth,
+)
 
 bp = Blueprint("accounts", __name__)
 
@@ -94,18 +99,34 @@ def account_detail(account_id: int):
     account = db.get_or_404(Account, account_id)
     ordered = sorted(account.values, key=lambda v: (v.recorded_at, v.id))
     history = list(reversed(ordered))
+
+    def _display_cents(v: AccountValue) -> int:
+        return v.equity_cents if account.tracks_loan else v.value_cents
+
     chart_points = [
         {
             "x": int(v.recorded_at.replace(tzinfo=timezone.utc).timestamp() * 1000),
-            "y": (v.equity_cents if account.tracks_loan else v.value_cents) / 100,
+            "y": _display_cents(v) / 100,
         }
         for v in ordered
+    ]
+    series = [
+        NetWorthPoint(recorded_at=v.recorded_at, net_cents=_display_cents(v))
+        for v in ordered
+    ]
+    projection_points = [
+        {
+            "x": int(p.recorded_at.replace(tzinfo=timezone.utc).timestamp() * 1000),
+            "y": p.net_cents / 100,
+        }
+        for p in project_net_worth(series)
     ]
     return render_template(
         "accounts/detail.html",
         account=account,
         history=history,
         chart_points=chart_points,
+        projection_points=projection_points,
     )
 
 

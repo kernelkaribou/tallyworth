@@ -128,3 +128,72 @@ def test_dashboard_hides_projection_with_too_little_history(client, app):
     assert resp.status_code == 200
     assert b"data-projection-source" not in resp.data
     assert b'id="networth-projection"' not in resp.data
+
+
+def test_account_detail_shows_projection_with_enough_history(client, app):
+    from app.extensions import db
+    from app.models import Account, AccountType, AccountValue
+
+    with app.app_context():
+        checking_type = AccountType.query.filter_by(name="Checking").first()
+        account = Account(name="Brokerage", account_type=checking_type)
+        db.session.add(account)
+        for i in range(3):
+            account.values.append(
+                AccountValue(
+                    value_cents=200000 + i * 30000,
+                    recorded_at=datetime(2026, 1, 1) + timedelta(days=30 * i),
+                )
+            )
+        db.session.commit()
+        account_id = account.id
+
+    resp = client.get(f"/accounts/{account_id}")
+    assert resp.status_code == 200
+    assert b'data-projection-source="account-history-projection"' in resp.data
+    assert b'id="account-history-projection"' in resp.data
+
+
+def test_account_detail_hides_projection_with_too_little_history(client, app):
+    from app.extensions import db
+    from app.models import Account, AccountType, AccountValue
+
+    with app.app_context():
+        checking_type = AccountType.query.filter_by(name="Checking").first()
+        account = Account(name="Sparse", account_type=checking_type)
+        db.session.add(account)
+        account.values.append(
+            AccountValue(value_cents=100000, recorded_at=datetime(2026, 1, 1))
+        )
+        db.session.commit()
+        account_id = account.id
+
+    resp = client.get(f"/accounts/{account_id}")
+    assert resp.status_code == 200
+    assert b"data-projection-source" not in resp.data
+    assert b'id="account-history-projection"' not in resp.data
+
+
+def test_loan_account_detail_projects_equity_trend(client, app):
+    from app.extensions import db
+    from app.models import Account, AccountType, AccountValue
+
+    with app.app_context():
+        re_type = AccountType.query.filter_by(name="Real Estate").first()
+        account = Account(name="Condo", account_type=re_type)
+        db.session.add(account)
+        # Flat market value, loan paid down -> equity trends up.
+        for i in range(3):
+            account.values.append(
+                AccountValue(
+                    value_cents=30000000,
+                    loan_cents=18000000 - i * 1000000,
+                    recorded_at=datetime(2026, 1, 1) + timedelta(days=30 * i),
+                )
+            )
+        db.session.commit()
+        account_id = account.id
+
+    resp = client.get(f"/accounts/{account_id}")
+    assert resp.status_code == 200
+    assert b'data-projection-source="account-history-projection"' in resp.data
