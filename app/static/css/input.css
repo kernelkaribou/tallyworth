@@ -5,3 +5,10 @@
 
 /* Enable class-based dark mode: `dark:` styles apply under <html class="dark">. */
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Single standard hover for interactive cards/tiles across the app. */
+@layer components {
+  .card-interactive {
+    @apply transition hover:-translate-y-0.5 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-lg hover:ring-1 hover:ring-slate-300 dark:hover:ring-slate-600;
+  }
+}
