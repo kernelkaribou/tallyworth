@@ -107,13 +107,13 @@
 <section class="mt-6 grid gap-4 sm:grid-cols-3">
   <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Income</p>
-    <p class="mt-1 text-2xl font-semibold text-emerald-600">
+    <p class="mt-1 text-2xl font-semibold text-gain">
       {{ summary.income_cents | money }}
     </p>
   </div>
   <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Expenses</p>
-    <p class="mt-1 text-2xl font-semibold text-red-700 dark:text-red-400">
+    <p class="mt-1 text-2xl font-semibold text-loss">
       {{ summary.expense_cents | money }}
     </p>
   </div>
@@ -121,7 +121,7 @@
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
       {% if summary.in_green %}In the green{% else %}In the red{% endif %}
     </p>
-    <p class="mt-1 text-2xl font-semibold {% if summary.in_green %}text-emerald-600{% else %}text-red-700 dark:text-red-400{% endif %}">
+    <p class="mt-1 text-2xl font-semibold {% if summary.in_green %}text-gain{% else %}text-loss{% endif %}">
       {{ summary.net_cents | money }}
     </p>
   </div>
@@ -132,14 +132,14 @@
     <h2 class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
       Income
     </h2>
-    {{ entry_rows(income, "text-emerald-600") }}
+    {{ entry_rows(income, "text-gain") }}
     {{ add_form("income", "Income") }}
   </div>
   <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
     <h2 class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
       Expenses
     </h2>
-    {{ entry_rows(expenses, "text-red-700 dark:text-red-400") }}
+    {{ entry_rows(expenses, "text-loss") }}
     {{ add_form("expense", "Expense") }}
   </div>
 </section>

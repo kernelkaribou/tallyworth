@@ -198,11 +198,11 @@
 
     var toneClass;
     if (delta > 0) {
-      toneClass = "text-emerald-600 dark:text-emerald-400";
+      toneClass = "text-gain";
     } else if (delta < 0) {
-      toneClass = "text-red-700 dark:text-red-400";
+      toneClass = "text-loss";
     } else {
-      toneClass = "text-slate-500 dark:text-slate-400";
+      toneClass = "text-flat";
     }
 
     var changeText;
