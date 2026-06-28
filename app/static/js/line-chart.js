@@ -285,11 +285,9 @@
           tooltip: {
             callbacks: {
               title: function (items) {
-                return (
-                  new Date(items[0].parsed.x).toLocaleString(undefined, {
-                    timeZone: "UTC",
-                  }) + " UTC"
-                );
+                return new Date(items[0].parsed.x).toLocaleDateString(undefined, {
+                  timeZone: "UTC",
+                });
               },
               label: function (ctx) {
                 return formatMoney(ctx.parsed.y);

@@ -262,12 +262,13 @@ def account_trends(accounts: list[Account]) -> dict[int, AccountTrend]:
 def net_worth_series(accounts: list[Account] | None = None) -> list[NetWorthPoint]:
     """Return net worth over time using a forward-fill of each account's value.
 
-    The series has one point per distinct timestamp at which any active account
-    recorded a value. At each timestamp every account contributes its most recent
-    value as of that moment (liabilities negative, equity for loan-tracking
-    accounts); accounts with no value yet contribute zero. Because the last value
-    is carried forward, the final point equals :func:`current_net_worth`. Archived
-    accounts are excluded so the series stays consistent with the current figure.
+    The series has one point per calendar date on which any active account
+    recorded a value; when a date has several snapshots the latest one wins. At
+    each date every account contributes its most recent value as of that moment
+    (liabilities negative, equity for loan-tracking accounts); accounts with no
+    value yet contribute zero. Because the last value is carried forward, the
+    final point equals :func:`current_net_worth`. Archived accounts are excluded
+    so the series stays consistent with the current figure.
     """
     if accounts is None:
         accounts = (
@@ -307,7 +308,18 @@ def net_worth_series(accounts: list[Account] | None = None) -> list[NetWorthPoin
         last_ts = recorded_at
 
     points.append(NetWorthPoint(recorded_at=last_ts, net_cents=sum(current.values())))
-    return points
+
+    # Collapse to one point per calendar date, keeping the latest entry that
+    # day. Net worth is tracked by day, not by time, so multiple same-date
+    # snapshots should surface as a single point at that date's most recent
+    # value. Points are ascending by timestamp, so same-date points are adjacent.
+    collapsed: list[NetWorthPoint] = []
+    for point in points:
+        if collapsed and collapsed[-1].recorded_at.date() == point.recorded_at.date():
+            collapsed[-1] = point
+        else:
+            collapsed.append(point)
+    return collapsed
 
 
 # Guardrails for the trend projection. Kept deliberately conservative: a short,

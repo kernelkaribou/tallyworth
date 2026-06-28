@@ -1,7 +1,7 @@
 """Tests for the net worth service."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from app.extensions import db
 from app.models import Account, AccountType, AccountValue
@@ -96,6 +96,22 @@ def test_series_collapses_same_timestamp(app):
         points = net_worth_series()
         assert len(points) == 1
         assert points[0].net_cents == 150000
+
+
+def test_series_collapses_same_date_keeping_latest(app):
+    with app.app_context():
+        checking = _account("Checking", "Checking")
+        _at(checking, 100000, datetime(2026, 4, 1, 9, 0))
+        _at(checking, 120000, datetime(2026, 4, 1, 17, 30))
+        _at(checking, 130000, datetime(2026, 4, 2, 8, 0))
+        db.session.commit()
+
+        points = net_worth_series()
+        assert [p.net_cents for p in points] == [120000, 130000]
+        assert [p.recorded_at.date() for p in points] == [
+            date(2026, 4, 1),
+            date(2026, 4, 2),
+        ]
 
 
 def test_series_excludes_archived(app):
