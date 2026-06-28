@@ -135,6 +135,15 @@
 {% block scripts %}
 <script>
   (function () {
+    const details = document.getElementById("account-types");
+    if (details) {
+      const openIfTargeted = function () {
+        if (location.hash === "#account-types") details.open = true;
+      };
+      openIfTargeted();
+      window.addEventListener("hashchange", openIfTargeted);
+    }
+
     const classification = document.getElementById("classification");
     const tracksLoan = document.getElementById("tracks_loan");
     if (!classification || !tracksLoan) return;
