@@ -26,19 +26,19 @@
   function theme() {
     if (isDark()) {
       return {
-        line: "#e2e8f0",
-        fill: "rgba(226, 232, 240, 0.08)",
-        text: "#94a3b8",
-        grid: "rgba(148, 163, 184, 0.15)",
-        zero: "rgba(148, 163, 184, 0.55)",
+        line: "#56a476",
+        fill: "rgba(86, 164, 118, 0.12)",
+        text: "#d4d8d6",
+        grid: "rgba(148, 184, 169, 0.15)",
+        zero: "rgba(148, 184, 169, 0.55)",
       };
     }
     return {
-      line: "#0f172a",
-      fill: "rgba(15, 23, 42, 0.08)",
-      text: "#475569",
-      grid: "rgba(148, 163, 184, 0.2)",
-      zero: "rgba(100, 116, 139, 0.55)",
+      line: "#246241",
+      fill: "rgba(36, 98, 65, 0.10)",
+      text: "#47695b",
+      grid: "rgba(148, 184, 169, 0.2)",
+      zero: "rgba(100, 139, 123, 0.55)",
     };
   }
 

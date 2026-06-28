@@ -58,7 +58,7 @@
       <div>
         <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Equity</p>
         <p class="mt-1 text-2xl font-semibold tabular-nums
-          {% if account.equity_cents is not none and account.equity_cents < 0 %}text-loss{% else %}text-gain{% endif %}">
+          {% if account.equity_cents is not none and account.equity_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
           {{ account.equity_cents | money }}
         </p>
       </div>
@@ -93,7 +93,7 @@
     <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="value">
       {% if account.tracks_loan %}Record market value &amp; loan{% else %}Record a new value{% endif %}
     </label>
-    <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-slate-500">
+    <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
       <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
       <input
         id="value"
@@ -106,7 +106,7 @@
       />
     </div>
     {% if account.tracks_loan %}
-    <div class="mt-2 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-slate-500">
+    <div class="mt-2 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
       <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
       <input
         id="loan"
@@ -122,7 +122,7 @@
     {% endif %}
     <button
       type="submit"
-      class="mt-3 rounded-lg bg-slate-900 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:hover:bg-slate-600"
+      class="mt-3 btn-primary"
     >
       Save value
     </button>

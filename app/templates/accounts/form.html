@@ -24,7 +24,7 @@
         type="text"
         required
         value="{{ account.name if editing else request.form.get('name', '') }}"
-        class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+        class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         placeholder="e.g. Main Checking"
       />
     </div>
@@ -46,7 +46,7 @@
         id="account_type_id"
         name="account_type_id"
         required
-        class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+        class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
       >
         <option value="" disabled {% if not editing and not request.form.get('account_type_id') %}selected{% endif %}>
           Choose a type
@@ -69,7 +69,7 @@
       <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="initial_value">
         Starting value (optional)
       </label>
-      <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-slate-500">
+      <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
         <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
         <input
           id="initial_value"
@@ -87,7 +87,7 @@
       <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="initial_loan">
         Loan balance (optional)
       </label>
-      <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-slate-500">
+      <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
         <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
         <input
           id="initial_loan"
@@ -108,7 +108,7 @@
     <div class="flex items-center gap-3">
       <button
         type="submit"
-        class="rounded-lg bg-slate-900 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:hover:bg-slate-600"
+        class="btn-primary"
       >
         {{ "Save changes" if editing else "Create account" }}
       </button>

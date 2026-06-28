@@ -18,7 +18,7 @@
           value="{{ entry.name }}"
           required
           aria-label="{{ entry.kind.value | capitalize }} name"
-          class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+          class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
         />
         <input
           type="text"
@@ -27,7 +27,7 @@
           inputmode="decimal"
           required
           aria-label="{{ entry.kind.value | capitalize }} amount"
-          class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums focus:border-slate-500 focus:outline-none dark:bg-slate-900 {{ accent }}"
+          class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums focus:border-money-500 focus:outline-none dark:bg-slate-900 {{ accent }}"
         />
         <button
           type="submit"
@@ -76,7 +76,7 @@
     placeholder="{{ label }} name"
     required
     aria-label="{{ label }} name"
-    class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+    class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
   />
   <input
     type="text"
@@ -85,11 +85,11 @@
     inputmode="decimal"
     required
     aria-label="{{ label }} amount"
-    class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+    class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
   />
   <button
     type="submit"
-    class="rounded-lg bg-slate-900 dark:bg-slate-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700 dark:hover:bg-slate-600"
+    class="rounded-lg bg-money-600 dark:bg-money-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-money-700 dark:hover:bg-money-500"
   >
     Add
   </button>

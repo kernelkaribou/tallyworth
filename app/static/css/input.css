@@ -22,6 +22,25 @@
   --color-money-800: #173f2b;
   --color-money-900: #102a1d;
   --color-money-950: #08150e;
+
+  /* Neutral chrome: we retint the whole slate scale from blue toward the same
+     green family (low chroma, a near-neutral charcoal with a faint green
+     undertone) so headers, cards, tables, borders and body text all read as one
+     cohesive "money" theme instead of clashing with the green accents. Shades
+     roughly track stock slate's lightness, tuned so muted text keeps WCAG AA
+     contrast in both modes. This is why the templates keep using `slate-*`
+     utilities: the single source of truth lives here. */
+  --color-slate-50: #fafafa;
+  --color-slate-100: #f4f6f5;
+  --color-slate-200: #e8eae9;
+  --color-slate-300: #d4d8d6;
+  --color-slate-400: #a1aba7;
+  --color-slate-500: #65726c;
+  --color-slate-600: #535d59;
+  --color-slate-700: #404845;
+  --color-slate-800: #383f3c;
+  --color-slate-900: #1b1e1d;
+  --color-slate-950: #0c0d0d;
 }
 
 /* Single standard hover for interactive cards/tiles across the app. */
@@ -41,8 +60,14 @@
     @apply text-slate-500 dark:text-slate-400;
   }
 
+  /* Primary action button: the money green is the app's brand call-to-action.
+     Used for every "create/save" button so the style lives in one place. */
+  .btn-primary {
+    @apply rounded-lg bg-money-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-money-700 focus:outline-none focus:ring-2 focus:ring-money-500 focus:ring-offset-2 focus:ring-offset-white dark:bg-money-600 dark:hover:bg-money-500 dark:focus:ring-offset-slate-800;
+  }
+
   .card-interactive {
-    @apply transition hover:-translate-y-0.5 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-lg hover:ring-1 hover:ring-slate-300 dark:hover:ring-slate-600;
+    @apply transition hover:-translate-y-0.5 hover:border-money-400 dark:hover:border-money-600 hover:shadow-lg hover:ring-1 hover:ring-money-300 dark:hover:ring-money-700;
   }
 
   .timeframe-btn {
@@ -50,6 +75,6 @@
   }
 
   .timeframe-btn.is-active {
-    @apply bg-slate-900 text-white hover:text-white dark:bg-slate-200 dark:text-slate-900 dark:hover:text-slate-900;
+    @apply bg-money-600 text-white hover:text-white dark:bg-money-600 dark:text-white dark:hover:text-white;
   }
 }

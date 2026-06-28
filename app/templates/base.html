@@ -41,7 +41,7 @@
     ></script>
   </head>
   <body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-    <header class="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+    <header class="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <a href="{{ url_for('main.index') }}" class="flex items-center gap-2.5 text-xl font-semibold">
           <img
@@ -52,7 +52,7 @@
           Tallyworth
         </a>
         <nav class="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
-          {% set nav_active = "text-slate-900 font-semibold dark:text-white" %}
+          {% set nav_active = "text-money-700 font-semibold dark:text-money-400" %}
           {% set nav_idle = "hover:text-slate-900 dark:hover:text-white" %}
           <a class="{{ nav_active if request.blueprint == 'main' else nav_idle }}"
              {% if request.blueprint == 'main' %}aria-current="page"{% endif %}
@@ -139,7 +139,7 @@
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
       data-tone-danger="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
-      data-tone-default="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:bg-slate-700 dark:hover:bg-slate-600 dark:focus:ring-offset-slate-800"
+      data-tone-default="rounded-lg bg-money-600 px-4 py-2 text-sm font-medium text-white hover:bg-money-700 focus:outline-none focus:ring-2 focus:ring-money-500 focus:ring-offset-2 dark:bg-money-600 dark:hover:bg-money-500 dark:focus:ring-offset-slate-800"
     >
       <div
         class="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800"
