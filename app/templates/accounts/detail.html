@@ -22,7 +22,7 @@
     </a>
     <form method="post" action="{{ url_for('accounts.toggle_archive', account_id=account.id) }}"
       {% if not account.archived %}
-      data-confirm="Closing hides this account from your dashboard and net worth total. You can reopen it at any time."
+      data-confirm="Closing {{ account.name }} hides it from your dashboard and net worth total. You can reopen it at any time."
       data-confirm-title="Close this account?"
       data-confirm-label="Close account"
       data-confirm-tone="default"
@@ -204,7 +204,11 @@
               method="post"
               action="{{ url_for('accounts.delete_value', account_id=account.id, value_id=v.id) }}"
               class="ml-3 inline"
-              data-confirm="Deleting this recorded value cannot be undone."
+              {% if account.tracks_loan %}
+              data-confirm="Deleting the entry from {{ v.recorded_at.strftime('%b %d, %Y') }} (value {{ v.value_cents | money }}, loan {{ v.loan_cents | money }}) cannot be undone."
+              {% else %}
+              data-confirm="Deleting the {{ 'balance' if is_liability else 'value' }} of {{ v.value_cents | money }} recorded on {{ v.recorded_at.strftime('%b %d, %Y') }} cannot be undone."
+              {% endif %}
               data-confirm-title="Delete value?"
               data-confirm-label="Delete"
               data-confirm-tone="danger"
