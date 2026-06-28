@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from "_macros.html" import info_tooltip %}
 
 {% block content %}
 <section class="flex items-center justify-between">
@@ -51,60 +50,41 @@
 </p>
 {% endif %}
 
-<details id="account-types" class="group mt-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-  <summary class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
-    <svg class="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-    <span>Account types</span>
-    {{ info_tooltip("Shows how each built-in account type affects your net worth.") }}
-  </summary>
-
-  <div class="border-t border-slate-200 dark:border-slate-700 p-4">
-    {% set asset_types = account_types | selectattr('classification.value', 'equalto', 'asset') | rejectattr('tracks_loan') | list %}
-    {% set equity_types = account_types | selectattr('tracks_loan') | list %}
-    {% set liability_types = account_types | selectattr('classification.value', 'equalto', 'liability') | list %}
-    <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-900/40 text-left text-slate-500 dark:text-slate-400">
-          <tr>
-            <th class="w-1/2 px-4 py-3 font-medium">Types</th>
-            <th class="px-4 py-3 font-medium">Description</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-700 align-top">
-          <tr>
-            <td class="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ asset_types | map(attribute='name') | join(', ') }}</td>
-            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">Adds its current value.</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ equity_types | map(attribute='name') | join(', ') }}</td>
-            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">Adds your equity: the market value minus the loan balance.</td>
-          </tr>
-          <tr>
-            <td class="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ liability_types | map(attribute='name') | join(', ') }}</td>
-            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">Subtracts the balance you owe.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
-      For equity types, don't add the related loan again as a separate liability.
-    </p>
+<section class="mt-8" aria-labelledby="account-types-heading">
+  <div class="mb-3">
+    <h2 id="account-types-heading" class="text-lg font-semibold">Account types</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400">A quick guide to how each built-in type affects your net worth.</p>
   </div>
-</details>
-{% endblock %}
 
-{% block scripts %}
-<script>
-  (function () {
-    const details = document.getElementById("account-types");
-    if (!details) return;
-    const openIfTargeted = function () {
-      if (location.hash === "#account-types") details.open = true;
-    };
-    openIfTargeted();
-    window.addEventListener("hashchange", openIfTargeted);
-  })();
-</script>
+  {% set asset_types = account_types | selectattr('classification.value', 'equalto', 'asset') | rejectattr('tracks_loan') | list %}
+  {% set equity_types = account_types | selectattr('tracks_loan') | list %}
+  {% set liability_types = account_types | selectattr('classification.value', 'equalto', 'liability') | list %}
+  <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 dark:bg-slate-900/40 text-left text-slate-500 dark:text-slate-400">
+        <tr>
+          <th class="w-1/2 px-4 py-3 font-medium">Types</th>
+          <th class="px-4 py-3 font-medium">Description</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-700 align-top">
+        <tr>
+          <td class="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ asset_types | map(attribute='name') | join(', ') }}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-300">Adds its current value.</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ equity_types | map(attribute='name') | join(', ') }}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-300">Adds your equity: the market value minus the loan balance.</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ liability_types | map(attribute='name') | join(', ') }}</td>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-300">Subtracts the balance you owe.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
+    For equity types, don't add the related loan again as a separate liability.
+  </p>
+</section>
 {% endblock %}
