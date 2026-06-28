@@ -43,13 +43,12 @@
   <body class="h-full bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
     <header class="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
       <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-        <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 text-xl font-semibold">
+        <a href="{{ url_for('main.index') }}" class="flex items-center" aria-label="Tallyworth home">
           <img
-            src="{{ url_for('static', filename='img/logo-mark.webp') }}"
-            alt=""
-            class="h-8 w-8"
+            src="{{ url_for('static', filename='img/logo.webp') }}"
+            alt="Tallyworth"
+            class="h-12 w-auto"
           />
-          Tallyworth
         </a>
         <nav class="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
           {% set nav_active = "text-slate-900 font-semibold dark:text-white" %}
