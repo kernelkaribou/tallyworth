@@ -1,62 +1,51 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="grid gap-4 sm:grid-cols-3">
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:col-span-3">
-    <p class="text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-      Current net worth
-    </p>
-    <p class="mt-1 text-4xl font-semibold
+<section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Current net worth</p>
+    <p class="mt-1 text-2xl font-semibold tabular-nums
       {% if summary.net_cents < 0 %}text-red-600{% else %}text-emerald-600{% endif %}">
       {{ summary.net_cents | money }}
     </p>
   </div>
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Assets</p>
-    <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+    <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
       {{ summary.assets_cents | money }}
     </p>
   </div>
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Liabilities</p>
-    <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+    <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
       {{ summary.liabilities_cents | money }}
     </p>
   </div>
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Active accounts</p>
-    <p class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ active_count }}</p>
-  </div>
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:col-span-3">
-    <div class="flex items-center justify-between">
-      <div>
-        {% if cashflow.has_entries %}
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
-          Monthly cashflow
-          {% if cashflow.in_green %}(in the green){% else %}(in the red){% endif %}
-        </p>
-        <p class="mt-1 text-2xl font-semibold {% if cashflow.in_green %}text-emerald-600{% else %}text-red-600{% endif %}">
-          {{ cashflow.net_cents | money }}
-        </p>
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          {{ cashflow.income_cents | money }} in &middot; {{ cashflow.expense_cents | money }} out
-          &middot; does not affect net worth
-        </p>
-        {% else %}
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly cashflow</p>
-        <p class="mt-1 text-2xl font-semibold text-slate-400 dark:text-slate-500">Not set up</p>
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Add income and expenses to see if you are in the green.
-        </p>
-        {% endif %}
-      </div>
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+    <div class="flex items-center justify-between gap-2">
+      <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
+        Monthly cashflow{% if cashflow.has_entries %} {% if cashflow.in_green %}(in the green){% else %}(in the red){% endif %}{% endif %}
+      </p>
       <a
         href="{{ url_for('cashflow.list_cashflow') }}"
-        class="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+        class="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
       >
         {% if cashflow.has_entries %}Manage{% else %}Set up{% endif %}
       </a>
     </div>
+    {% if cashflow.has_entries %}
+    <p class="mt-1 text-2xl font-semibold tabular-nums {% if cashflow.in_green %}text-emerald-600{% else %}text-red-600{% endif %}">
+      {{ cashflow.net_cents | money }}
+    </p>
+    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      {{ cashflow.income_cents | money }} in &middot; {{ cashflow.expense_cents | money }} out
+    </p>
+    {% else %}
+    <p class="mt-1 text-2xl font-semibold text-slate-400 dark:text-slate-500">Not set up</p>
+    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      Add income and expenses to track it.
+    </p>
+    {% endif %}
   </div>
 </section>
 
@@ -86,7 +75,10 @@
 {% endif %}
 
 <section class="mt-8 flex items-center justify-between">
-  <h2 class="text-lg font-semibold">Accounts</h2>
+  <h2 class="text-lg font-semibold">
+    Accounts
+    <span class="ml-1 text-sm font-normal text-slate-500 dark:text-slate-400">{{ active_count }}</span>
+  </h2>
   <a
     href="{{ url_for('accounts.new_account') }}"
     class="rounded-lg bg-slate-900 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:hover:bg-slate-600"
