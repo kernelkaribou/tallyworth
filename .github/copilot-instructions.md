@@ -64,7 +64,7 @@ net worth figure, charts, and a per-timeframe net worth change summary.
 - Build CSS: `npm install && npm run build:css` (watch: `npm run watch:css`)
 - Run locally: `FLASK_APP=wsgi.py flask run` (after building CSS)
 - Migrations: `FLASK_APP=wsgi.py flask db migrate -m "msg"` then `flask db upgrade`
-- Docker: `docker compose up --build`
+- Docker: `docker compose up -d` (published image); container runs migrations + seed and supports `PUID`/`PGID`/`TZ`
 
 ## Workflow rules (see tmp/DEV.md)
 

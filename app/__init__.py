@@ -131,7 +131,9 @@ def _ensure_secret_key(app: Flask) -> None:
     data_dir = Path(app.config["DATA_DIR"])
     data_dir.mkdir(parents=True, exist_ok=True)
     key_file = data_dir / "secret_key"
-    if not key_file.exists():
-        key_file.write_text(secrets.token_urlsafe(48))
+    key = key_file.read_text().strip() if key_file.exists() else ""
+    if len(key) < 32:
+        key = secrets.token_urlsafe(48)
+        key_file.write_text(key)
         key_file.chmod(0o600)
-    app.config["SECRET_KEY"] = key_file.read_text().strip()
+    app.config["SECRET_KEY"] = key

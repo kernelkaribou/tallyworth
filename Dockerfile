@@ -20,6 +20,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 RUN pip install --no-cache-dir --upgrade pip
+RUN apt-get update && apt-get install -y --no-install-recommends gosu tzdata passwd && \
+    rm -rf /var/lib/apt/lists/*
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -34,7 +36,6 @@ RUN chmod +x docker-entrypoint.sh && \
     mkdir -p /data && \
     addgroup --system app && adduser --system --ingroup app app && \
     chown -R app:app /app /data
-USER app
 
 EXPOSE 8000
 VOLUME ["/data"]

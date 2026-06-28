@@ -53,6 +53,10 @@ services:
       - "8000:8000"
     volumes:
       - ./tallyworth-data:/data
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: America/New_York
     restart: unless-stopped
 ```
 
@@ -76,6 +80,8 @@ Tallyworth runs with zero configuration. Everything below is optional:
 
 | Variable           | Default                   | Description                                                                 |
 | ------------------ | ------------------------- | --------------------------------------------------------------------------- |
+| `PUID` / `PGID`    | `1000` / `1000`           | Host user/group id that should own files on the data volume.                |
+| `TZ`               | UTC                       | Timezone, e.g. `America/New_York`.                                          |
 | `DEFAULT_CURRENCY` | `USD`                     | ISO code (USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SEK, NZD, ZAR). Unknown codes fall back to USD. |
 | `CURRENCY_SYMBOL`  | (from `DEFAULT_CURRENCY`) | Raw symbol override for a currency not in the list. Wins over `DEFAULT_CURRENCY`. |
 | `SECRET_KEY`       | auto-generated in `/data` | Only set this if you want to supply your own (e.g. shared across replicas). |
