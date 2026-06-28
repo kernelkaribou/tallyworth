@@ -132,7 +132,10 @@ def account_detail(account_id: int):
 def edit_account(account_id: int):
     account = db.get_or_404(Account, account_id)
     return render_template(
-        "accounts/form.html", account=account, account_types=_ordered_types()
+        "accounts/form.html",
+        account=account,
+        account_types=_ordered_types(),
+        lock_type=bool(account.values),
     )
 
 
@@ -142,20 +145,25 @@ def update_account(account_id: int):
     name = (request.form.get("name") or "").strip()
     type_id = request.form.get("account_type_id", type=int)
     account_type = db.session.get(AccountType, type_id) if type_id else None
+    # The type drives how every recorded value is interpreted, so it is locked
+    # once history exists; ignore any attempt to change it then.
+    locked = bool(account.values)
 
-    if not name or account_type is None:
+    if not name or (account_type is None and not locked):
         flash("Name and account type are required.", "error")
         return (
             render_template(
                 "accounts/form.html",
                 account=account,
                 account_types=_ordered_types(),
+                lock_type=locked,
             ),
             400,
         )
 
     account.name = name
-    account.account_type = account_type
+    if not locked:
+        account.account_type = account_type
     db.session.commit()
     flash("Account updated.", "success")
     return redirect(url_for("accounts.account_detail", account_id=account.id))
@@ -233,46 +241,6 @@ def toggle_archive(account_id: int):
     state = "closed" if account.archived else "reopened"
     flash(f"Account {state}.", "success")
     return redirect(url_for("accounts.list_accounts"))
-
-
-@bp.post("/account-types")
-def create_account_type():
-    name = (request.form.get("name") or "").strip()
-    classification_raw = request.form.get("classification") or ""
-    tracks_loan = request.form.get("tracks_loan") == "on"
-
-    types_anchor = url_for("accounts.list_accounts") + "#account-types"
-
-    if not name:
-        flash("Type name is required.", "error")
-        return redirect(types_anchor)
-    if AccountType.query.filter(AccountType.name.ilike(name)).first():
-        flash(f"An account type named '{name}' already exists.", "error")
-        return redirect(types_anchor)
-    try:
-        classification = Classification(classification_raw)
-    except ValueError:
-        flash("Please choose a valid classification.", "error")
-        return redirect(types_anchor)
-
-    if tracks_loan and classification == Classification.liability:
-        flash(
-            "Loan tracking applies to assets only, not liabilities.",
-            "error",
-        )
-        return redirect(types_anchor)
-
-    db.session.add(
-        AccountType(
-            name=name,
-            classification=classification,
-            tracks_loan=tracks_loan,
-            is_builtin=False,
-        )
-    )
-    db.session.commit()
-    flash(f"Account type '{name}' added.", "success")
-    return redirect(types_anchor)
 
 
 def _parse_value_loan(

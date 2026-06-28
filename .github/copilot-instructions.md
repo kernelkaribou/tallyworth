@@ -25,8 +25,10 @@ net worth figure, charts, and a per-timeframe net worth change summary.
   (market value minus loan balance). Income/expenses are a SEPARATE monthly cashflow indicator
   and do NOT feed the net worth figure.
 - Accounts use a unified `account` table with an `account_type`. Account types have a
-  `classification` (asset or liability) and a `tracks_loan` flag (for Real Estate, Vehicle).
-  A standard set of types is seeded; users can add custom types.
+  `classification` (asset or liability) and a `tracks_loan` flag (equity types like
+  Property/Vehicle: net worth gets value − loan). The taxonomy is a fixed built-in set
+  seeded by `flask seed-types` (which also migrates older renamed/removed built-ins);
+  users do NOT create custom types. An account's type is locked once it has recorded values.
 - Net worth over time is computed by forward-filling each account's last known value across all
   change dates. Before an account's first value it is absent (not zero). Archived accounts keep
   their historical contribution but are excluded from the current figure.

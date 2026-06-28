@@ -18,9 +18,9 @@ in full control of the numbers you enter.
   the current one, and the history is kept for charts.
 - **Separate assets from liabilities.** Mark account types as assets (things you
   own) or liabilities (things you owe). Liabilities subtract from your net worth.
-- **Choose an account type.** Pick from built-in types (checking, savings,
-  brokerage, retirement, real estate, vehicle, credit card, loan, and more) or
-  create your own.
+- **Choose an account type.** Pick from a fixed set of built-in types
+  (checking, savings, investments, retirement, property, vehicle, credit card,
+  loan, and more). Each type defines how the account counts toward net worth.
 - **Track equity on financed assets.** For things like a house or a car, record
   both the market value and the outstanding loan. Tallyworth counts the equity
   (value minus loan) toward your net worth.

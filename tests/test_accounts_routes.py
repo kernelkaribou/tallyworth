@@ -84,25 +84,15 @@ def test_archive_toggle(app, client):
         assert db.session.get(Account, account_id).archived is False
 
 
-def test_create_custom_account_type(app, client):
+def test_account_type_creation_route_is_gone(app, client):
+    # Account types are a fixed built-in taxonomy; the create endpoint is removed.
     resp = client.post(
         "/account-types",
-        data={"name": "Pension", "classification": "asset", "tracks_loan": "off"},
-        follow_redirects=True,
+        data={"name": "Pension", "classification": "asset"},
     )
-    assert resp.status_code == 200
+    assert resp.status_code in (404, 405)
     with app.app_context():
-        t = AccountType.query.filter_by(name="Pension").first()
-        assert t is not None and t.is_builtin is False
-
-
-def test_custom_type_rejects_duplicate(app, client):
-    resp = client.post(
-        "/account-types",
-        data={"name": "Checking", "classification": "asset"},
-        follow_redirects=True,
-    )
-    assert b"already exists" in resp.data
+        assert AccountType.query.filter_by(name="Pension").first() is None
 
 
 def test_add_value_rejects_negative_liability(app, client):
@@ -195,9 +185,10 @@ def test_update_account_renames_and_changes_type(app, client):
     with app.app_context():
         checking = _type_id("Checking")
         savings = _type_id("Savings")
+    # No recorded values yet, so the type is still editable.
     client.post(
         "/accounts",
-        data={"name": "Rename Me", "account_type_id": checking, "initial_value": "100"},
+        data={"name": "Rename Me", "account_type_id": checking},
         follow_redirects=True,
     )
     with app.app_context():
@@ -212,6 +203,33 @@ def test_update_account_renames_and_changes_type(app, client):
         account = db.session.get(Account, account_id)
         assert account.name == "Renamed"
         assert account.account_type.name == "Savings"
+
+
+def test_account_type_locked_once_values_exist(app, client):
+    with app.app_context():
+        checking = _type_id("Checking")
+        savings = _type_id("Savings")
+    client.post(
+        "/accounts",
+        data={"name": "Locked", "account_type_id": checking, "initial_value": "100"},
+        follow_redirects=True,
+    )
+    with app.app_context():
+        account_id = Account.query.filter_by(name="Locked").one().id
+    # The edit form should not offer a type selector once history exists.
+    form = client.get(f"/accounts/{account_id}/edit")
+    assert b"The type is locked" in form.data
+    # A forged type change is ignored; only the name updates.
+    resp = client.post(
+        f"/accounts/{account_id}/edit",
+        data={"name": "Still Checking", "account_type_id": savings},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+    with app.app_context():
+        account = db.session.get(Account, account_id)
+        assert account.name == "Still Checking"
+        assert account.account_type.name == "Checking"
 
 
 def test_update_account_requires_name(app, client):
@@ -232,23 +250,3 @@ def test_update_account_requires_name(app, client):
     assert b"required" in resp.data
     with app.app_context():
         assert db.session.get(Account, account_id).name == "Keep"
-
-
-def test_custom_type_requires_name(app, client):
-    resp = client.post(
-        "/account-types",
-        data={"name": "  ", "classification": "asset"},
-        follow_redirects=True,
-    )
-    assert b"name is required" in resp.data.lower()
-
-
-def test_custom_type_rejects_invalid_classification(app, client):
-    resp = client.post(
-        "/account-types",
-        data={"name": "Weird", "classification": "nonsense"},
-        follow_redirects=True,
-    )
-    assert b"valid classification" in resp.data.lower()
-    with app.app_context():
-        assert AccountType.query.filter_by(name="Weird").first() is None

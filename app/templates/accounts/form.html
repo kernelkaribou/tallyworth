@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% set editing = account is not none %}
+{% set lock_type = lock_type|default(false) %}
 
 {% block content %}
 <section class="mx-auto max-w-lg">
@@ -27,9 +28,18 @@
     </div>
 
     <div>
-      <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="account_type_id">
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" {% if not lock_type %}for="account_type_id"{% endif %}>
         Account type
       </label>
+      {% if lock_type %}
+      <div class="mt-1 flex items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-600 dark:text-slate-300">
+        {{ account.account_type.name }} ({{ account.account_type.classification.value }})
+      </div>
+      <input type="hidden" name="account_type_id" value="{{ account.account_type_id }}" />
+      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        The type is locked because this account already has recorded values.
+      </p>
+      {% else %}
       <select
         id="account_type_id"
         name="account_type_id"
@@ -49,10 +59,7 @@
         </option>
         {% endfor %}
       </select>
-      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-        Need another type?
-        <a class="underline" href="{{ url_for('accounts.list_accounts') }}#account-types">Manage types</a>.
-      </p>
+      {% endif %}
     </div>
 
     {% if not editing %}

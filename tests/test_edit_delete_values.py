@@ -81,7 +81,7 @@ def test_edit_value_cross_account_404(app, client):
 
 def test_edit_loan_tracking_value(app, client):
     with app.app_context():
-        tid = _type_id("Real Estate")
+        tid = _type_id("Property (Equity)")
     client.post(
         "/accounts",
         data={
@@ -139,7 +139,7 @@ def test_edit_liability_rejects_negative(app, client):
 
 def test_edit_loan_tracking_rejects_negative_loan(app, client):
     with app.app_context():
-        tid = _type_id("Real Estate")
+        tid = _type_id("Property (Equity)")
     client.post(
         "/accounts",
         data={

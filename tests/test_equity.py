@@ -16,7 +16,7 @@ from app.services.networth import (
 )
 
 
-def _loan_account(name="House", type_name="Real Estate"):
+def _loan_account(name="House", type_name="Property (Equity)"):
     account_type = AccountType.query.filter_by(name=type_name).first()
     account = Account(name=name, account_type=account_type)
     db.session.add(account)
@@ -37,7 +37,7 @@ def test_equity_is_value_minus_loan(app):
 
 def test_equity_can_be_negative_when_underwater(app):
     with app.app_context():
-        car = _loan_account(name="Car", type_name="Vehicle")
+        car = _loan_account(name="Car", type_name="Vehicle (Equity)")
         car.values.append(AccountValue(value_cents=1500000, loan_cents=2000000))
         db.session.commit()
         assert car.equity_cents == -500000
@@ -110,7 +110,7 @@ def test_negative_loan_rejected_by_db_constraint(app):
 
 def test_create_loan_account_with_initial_value_and_loan(client, app):
     with app.app_context():
-        type_id = AccountType.query.filter_by(name="Real Estate").first().id
+        type_id = AccountType.query.filter_by(name="Property (Equity)").first().id
     client.post(
         "/accounts",
         data={
@@ -130,7 +130,7 @@ def test_create_loan_account_with_initial_value_and_loan(client, app):
 
 def test_loan_account_requires_loan_when_recording_value(client, app):
     with app.app_context():
-        type_id = AccountType.query.filter_by(name="Vehicle").first().id
+        type_id = AccountType.query.filter_by(name="Vehicle (Equity)").first().id
     client.post(
         "/accounts",
         data={"name": "Truck", "account_type_id": type_id},
@@ -151,7 +151,7 @@ def test_loan_account_requires_loan_when_recording_value(client, app):
 
 def test_detail_chart_label_is_equity_for_loan_account(client, app):
     with app.app_context():
-        type_id = AccountType.query.filter_by(name="Vehicle").first().id
+        type_id = AccountType.query.filter_by(name="Vehicle (Equity)").first().id
     client.post(
         "/accounts",
         data={
@@ -170,24 +170,9 @@ def test_detail_chart_label_is_equity_for_loan_account(client, app):
     assert b"Loan balance" in resp.data
 
 
-def test_liability_type_cannot_track_loan(client, app):
-    resp = client.post(
-        "/account-types",
-        data={
-            "name": "Bad Mortgage",
-            "classification": "liability",
-            "tracks_loan": "on",
-        },
-        follow_redirects=True,
-    )
-    assert b"applies to assets only" in resp.data.lower()
-    with app.app_context():
-        assert AccountType.query.filter_by(name="Bad Mortgage").first() is None
-
-
 def test_loan_without_market_value_is_rejected(client, app):
     with app.app_context():
-        type_id = AccountType.query.filter_by(name="Real Estate").first().id
+        type_id = AccountType.query.filter_by(name="Property (Equity)").first().id
     resp = client.post(
         "/accounts",
         data={
@@ -204,7 +189,7 @@ def test_loan_without_market_value_is_rejected(client, app):
 
 def test_negative_market_value_rejected_for_loan_account(client, app):
     with app.app_context():
-        type_id = AccountType.query.filter_by(name="Vehicle").first().id
+        type_id = AccountType.query.filter_by(name="Vehicle (Equity)").first().id
     client.post(
         "/accounts",
         data={
@@ -227,7 +212,7 @@ def test_negative_market_value_rejected_for_loan_account(client, app):
 
 def test_loan_input_prefilled_with_latest_balance(client, app):
     with app.app_context():
-        type_id = AccountType.query.filter_by(name="Real Estate").first().id
+        type_id = AccountType.query.filter_by(name="Property (Equity)").first().id
     client.post(
         "/accounts",
         data={

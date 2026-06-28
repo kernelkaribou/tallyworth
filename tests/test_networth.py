@@ -26,7 +26,7 @@ def _at(account, value_cents, recorded_at):
 def test_net_worth_assets_minus_liabilities(app):
     with app.app_context():
         _account("Checking", "Checking", 100000, 150000)  # latest 1500
-        _account("Brokerage", "Brokerage / Stocks", 250000)  # 2500
+        _account("Brokerage", "Investments", 250000)  # 2500
         _account("Visa", "Credit Card", 40000)  # -400
         db.session.commit()
 

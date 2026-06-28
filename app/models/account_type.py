@@ -1,8 +1,10 @@
 """Account type taxonomy.
 
 An account type carries the financial classification that drives net worth maths
-(assets are positive, liabilities are negative) and a flag for types that track a
-loan/equity workflow (e.g. real estate, vehicles).
+(assets are positive, liabilities are negative) and a flag for "equity" types
+that track a market value alongside an outstanding loan and contribute only the
+difference (value minus loan), e.g. property and vehicles. The taxonomy is a
+fixed built-in set; users do not create their own types.
 """
 from __future__ import annotations
 
