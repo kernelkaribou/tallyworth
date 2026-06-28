@@ -98,9 +98,86 @@
       canvas: canvas,
       points: points,
       projection: projection,
+      projIndex: projection ? 1 : null,
+      range: canvas.dataset.defaultRange || "lifetime",
       chart: renderChart(canvas, points, projection),
     });
   });
+
+  // Wire up any timeframe pill controls (data-timeframe-control on the canvas).
+  instances.forEach(function (inst) {
+    var ctrlId = inst.canvas.dataset.timeframeControl;
+    if (!ctrlId) return;
+    var ctrl = document.getElementById(ctrlId);
+    if (!ctrl) return;
+    var buttons = ctrl.querySelectorAll("[data-range]");
+    Array.prototype.forEach.call(buttons, function (btn) {
+      btn.addEventListener("click", function () {
+        inst.range = btn.dataset.range;
+        Array.prototype.forEach.call(buttons, function (other) {
+          other.classList.toggle("is-active", other === btn);
+        });
+        applyRange(inst);
+      });
+    });
+    applyRange(inst);
+  });
+
+  var DAY_MS = 86400000;
+
+  // Translate a timeframe key into the earliest x (epoch ms) to display, or
+  // undefined for "lifetime" (show all history). Clamped to the first data
+  // point so we never render empty space before the series starts.
+  function rangeStart(range, points) {
+    var firstX = points[0].x;
+    var now = Date.now();
+    var minX;
+    switch (range) {
+      case "1m": minX = now - 30 * DAY_MS; break;
+      case "3m": minX = now - 91 * DAY_MS; break;
+      case "1y": minX = now - 365 * DAY_MS; break;
+      case "ytd": minX = Date.UTC(new Date().getUTCFullYear(), 0, 1); break;
+      case "3y": minX = now - 1095 * DAY_MS; break;
+      case "5y": minX = now - 1825 * DAY_MS; break;
+      default: return undefined;
+    }
+    return Math.max(minX, firstX);
+  }
+
+  // Apply the instance's selected timeframe to its chart by zooming the x-axis.
+  // The projection (dashed future line) is only shown when the visible history
+  // window is at least as long as the projection horizon, so a short range
+  // never gets dominated by a disproportionately long forward estimate.
+  function applyRange(inst) {
+    if (!inst.chart) return;
+    var range = inst.range || "lifetime";
+    var points = inst.points;
+    var lastActual = points[points.length - 1].x;
+    var minX = rangeStart(range, points);
+    if (minX !== undefined && minX >= lastActual) minX = points[0].x;
+    var startX = minX === undefined ? points[0].x : minX;
+
+    var showProjection = false;
+    if (inst.projIndex !== null && inst.projection && inst.projection.length) {
+      var horizon =
+        inst.projection[inst.projection.length - 1].x - inst.projection[0].x;
+      showProjection = lastActual - startX >= horizon;
+      inst.chart.setDatasetVisibility(inst.projIndex, showProjection);
+    }
+
+    var maxX;
+    if (range === "lifetime") {
+      maxX = undefined;
+    } else if (showProjection) {
+      maxX = inst.projection[inst.projection.length - 1].x;
+    } else {
+      maxX = lastActual;
+    }
+
+    inst.chart.options.scales.x.min = minX;
+    inst.chart.options.scales.x.max = maxX;
+    inst.chart.update();
+  }
 
   function renderChart(canvas, points, projection) {
     var symbol = canvas.dataset.symbol || "$";
@@ -232,6 +309,7 @@
           inst.chart.destroy();
         }
         inst.chart = renderChart(inst.canvas, inst.points, inst.projection);
+        applyRange(inst);
       });
     },
   };

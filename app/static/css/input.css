@@ -11,4 +11,12 @@
   .card-interactive {
     @apply transition hover:-translate-y-0.5 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-lg hover:ring-1 hover:ring-slate-300 dark:hover:ring-slate-600;
   }
+
+  .timeframe-btn {
+    @apply rounded-md px-2 py-1 text-xs font-medium text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white;
+  }
+
+  .timeframe-btn.is-active {
+    @apply bg-slate-900 text-white hover:text-white dark:bg-slate-200 dark:text-slate-900 dark:hover:text-slate-900;
+  }
 }

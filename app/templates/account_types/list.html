@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% from "_macros.html" import info_tooltip %}
 
 {% block content %}
 <section>
-  <h1 class="text-xl font-semibold">Account types</h1>
-  <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-    Standard types are built in. Add your own custom types as needed.
-  </p>
+  <h1 class="flex items-center gap-2 text-xl font-semibold">
+    Account types
+    {{ info_tooltip("Standard types are built in. Add your own custom types as needed.") }}
+  </h1>
 </section>
 
 <div class="mt-6 grid gap-6 lg:grid-cols-3">
