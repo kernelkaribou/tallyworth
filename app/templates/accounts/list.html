@@ -64,15 +64,12 @@
     <div class="rounded-lg border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-900/60 dark:bg-sky-950/30">
       <div class="text-sm font-semibold text-sky-800 dark:text-sky-300">Adds equity</div>
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ equity_types | map(attribute='name') | join(', ') }}</p>
-      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Equity means market value minus loan balance.</p>
+      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Equity is market value minus loan balance. Don't also add the loan as a separate liability.</p>
     </div>
     <div class="rounded-lg border border-rose-200 bg-rose-50/60 p-4 dark:border-rose-900/60 dark:bg-rose-950/30">
       <div class="text-sm font-semibold text-rose-800 dark:text-rose-300">Subtracts balance</div>
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ liability_types | map(attribute='name') | join(', ') }}</p>
     </div>
   </div>
-  <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
-    For equity types, don't add the related loan again as a separate liability.
-  </p>
 </section>
 {% endblock %}
