@@ -41,7 +41,12 @@ def list_accounts():
         .all()
     )
     values = display_value_map(accounts)
-    return render_template("accounts/list.html", accounts=accounts, values=values)
+    return render_template(
+        "accounts/list.html",
+        accounts=accounts,
+        values=values,
+        account_types=_ordered_types(),
+    )
 
 
 @bp.get("/accounts/new")
@@ -230,37 +235,32 @@ def toggle_archive(account_id: int):
     return redirect(url_for("accounts.list_accounts"))
 
 
-@bp.get("/account-types")
-def list_account_types():
-    return render_template(
-        "account_types/list.html", account_types=_ordered_types()
-    )
-
-
 @bp.post("/account-types")
 def create_account_type():
     name = (request.form.get("name") or "").strip()
     classification_raw = request.form.get("classification") or ""
     tracks_loan = request.form.get("tracks_loan") == "on"
 
+    types_anchor = url_for("accounts.list_accounts") + "#account-types"
+
     if not name:
         flash("Type name is required.", "error")
-        return redirect(url_for("accounts.list_account_types"))
+        return redirect(types_anchor)
     if AccountType.query.filter(AccountType.name.ilike(name)).first():
         flash(f"An account type named '{name}' already exists.", "error")
-        return redirect(url_for("accounts.list_account_types"))
+        return redirect(types_anchor)
     try:
         classification = Classification(classification_raw)
     except ValueError:
         flash("Please choose a valid classification.", "error")
-        return redirect(url_for("accounts.list_account_types"))
+        return redirect(types_anchor)
 
     if tracks_loan and classification == Classification.liability:
         flash(
             "Loan tracking applies to assets only, not liabilities.",
             "error",
         )
-        return redirect(url_for("accounts.list_account_types"))
+        return redirect(types_anchor)
 
     db.session.add(
         AccountType(
@@ -272,7 +272,7 @@ def create_account_type():
     )
     db.session.commit()
     flash(f"Account type '{name}' added.", "success")
-    return redirect(url_for("accounts.list_account_types"))
+    return redirect(types_anchor)
 
 
 def _parse_value_loan(

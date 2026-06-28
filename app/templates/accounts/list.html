@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_macros.html" import info_tooltip %}
 
 {% block content %}
 <section class="flex items-center justify-between">
@@ -49,4 +50,104 @@
   No accounts yet. Add your first account to start tracking your net worth.
 </p>
 {% endif %}
+
+<details id="account-types" class="group mt-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+  <summary class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+    <svg class="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+    <span>Account types</span>
+    {{ info_tooltip("Standard types are built in. Add your own custom types as needed.") }}
+  </summary>
+
+  <div class="grid gap-6 border-t border-slate-200 dark:border-slate-700 p-4 lg:grid-cols-3">
+    <div class="lg:col-span-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 dark:bg-slate-900/40 text-left text-slate-500 dark:text-slate-400">
+          <tr>
+            <th class="px-4 py-3 font-medium">Name</th>
+            <th class="px-4 py-3 font-medium">Classification</th>
+            <th class="px-4 py-3 font-medium">Tracks loan</th>
+            <th class="px-4 py-3 font-medium">Source</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+          {% for t in account_types %}
+          <tr>
+            <td class="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ t.name }}</td>
+            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ t.classification.value }}</td>
+            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ "Yes" if t.tracks_loan else "No" }}</td>
+            <td class="px-4 py-3 text-slate-500 dark:text-slate-400">
+              {{ "Built-in" if t.is_builtin else "Custom" }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <form
+      method="post"
+      action="{{ url_for('accounts.create_account_type') }}"
+      class="space-y-4 rounded-xl border border-slate-200 dark:border-slate-700 p-6"
+    >
+      <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Add a custom type</h2>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="type_name">Name</label>
+        <input
+          id="type_name"
+          name="name"
+          type="text"
+          required
+          class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+          placeholder="e.g. Pension"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="classification">
+          Classification
+        </label>
+        <select
+          id="classification"
+          name="classification"
+          required
+          class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+        >
+          <option value="asset">Asset (adds to net worth)</option>
+          <option value="liability">Liability (subtracts from net worth)</option>
+        </select>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+        <input type="checkbox" id="tracks_loan" name="tracks_loan" class="rounded border-slate-300 dark:border-slate-600" />
+        Tracks a loan / equity (e.g. property, vehicle)
+      </label>
+      <button
+        type="submit"
+        class="rounded-lg bg-slate-900 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:hover:bg-slate-600"
+      >
+        Add type
+      </button>
+    </form>
+  </div>
+</details>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const classification = document.getElementById("classification");
+    const tracksLoan = document.getElementById("tracks_loan");
+    if (!classification || !tracksLoan) return;
+    function sync() {
+      const isLiability = classification.value === "liability";
+      if (isLiability) {
+        tracksLoan.checked = false;
+      }
+      tracksLoan.disabled = isLiability;
+      tracksLoan.closest("label").classList.toggle("opacity-50", isLiability);
+    }
+    classification.addEventListener("change", sync);
+    sync();
+  })();
+</script>
 {% endblock %}
