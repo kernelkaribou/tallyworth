@@ -29,12 +29,27 @@
     if (!points || points.length === 0) {
       return;
     }
-    renderChart(canvas, points);
+    var projection = null;
+    if (canvas.dataset.projectionSource) {
+      var projEl = document.getElementById(canvas.dataset.projectionSource);
+      if (projEl) {
+        try {
+          var parsed = JSON.parse(projEl.textContent);
+          if (parsed && parsed.length > 0) {
+            projection = parsed;
+          }
+        } catch (e) {
+          projection = null;
+        }
+      }
+    }
+    renderChart(canvas, points, projection);
   });
 
-  function renderChart(canvas, points) {
+  function renderChart(canvas, points, projection) {
     var symbol = canvas.dataset.symbol || "$";
     var label = canvas.dataset.label || "Value";
+    var projectionLabel = canvas.dataset.projectionLabel || "Projected";
 
     function formatMoney(value) {
       return (
@@ -46,22 +61,39 @@
       );
     }
 
+    var datasets = [
+      {
+        label: label,
+        data: points,
+        borderColor: "#0f172a",
+        backgroundColor: "rgba(15, 23, 42, 0.08)",
+        borderWidth: 2,
+        tension: 0.25,
+        fill: true,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      },
+    ];
+
+    if (projection) {
+      datasets.push({
+        label: projectionLabel,
+        data: projection,
+        borderColor: "#64748b",
+        backgroundColor: "transparent",
+        borderWidth: 2,
+        borderDash: [6, 6],
+        tension: 0,
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+      });
+    }
+
     new Chart(canvas, {
       type: "line",
       data: {
-        datasets: [
-          {
-            label: label,
-            data: points,
-            borderColor: "#0f172a",
-            backgroundColor: "rgba(15, 23, 42, 0.08)",
-            borderWidth: 2,
-            tension: 0.25,
-            fill: true,
-            pointRadius: 3,
-            pointHoverRadius: 5,
-          },
-        ],
+        datasets: datasets,
       },
       options: {
         responsive: true,
@@ -90,7 +122,7 @@
           },
         },
         plugins: {
-          legend: { display: false },
+          legend: { display: !!projection, position: "bottom" },
           tooltip: {
             callbacks: {
               title: function (items) {
