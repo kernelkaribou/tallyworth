@@ -36,6 +36,10 @@
       <form
         method="post"
         action="{{ url_for('cashflow.delete_cashflow', entry_id=entry.id) }}"
+        data-confirm="Deleting this entry cannot be undone."
+        data-confirm-title="Delete entry?"
+        data-confirm-label="Delete"
+        data-confirm-tone="danger"
       >
         <button
           type="submit"

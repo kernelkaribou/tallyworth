@@ -20,7 +20,14 @@
     >
       Edit
     </a>
-    <form method="post" action="{{ url_for('accounts.toggle_archive', account_id=account.id) }}">
+    <form method="post" action="{{ url_for('accounts.toggle_archive', account_id=account.id) }}"
+      {% if not account.archived %}
+      data-confirm="Closing hides this account from your dashboard and net worth total. You can reopen it at any time."
+      data-confirm-title="Close this account?"
+      data-confirm-label="Close account"
+      data-confirm-tone="default"
+      {% endif %}
+    >
       <button
         type="submit"
         class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
@@ -197,7 +204,10 @@
               method="post"
               action="{{ url_for('accounts.delete_value', account_id=account.id, value_id=v.id) }}"
               class="ml-3 inline"
-              onsubmit="return confirm('Delete this value? This cannot be undone.');"
+              data-confirm="Deleting this recorded value cannot be undone."
+              data-confirm-title="Delete value?"
+              data-confirm-label="Delete"
+              data-confirm-tone="danger"
             >
               <button type="submit" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">Delete</button>
             </form>
