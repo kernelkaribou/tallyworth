@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.models.account import Account
 from app.services.cashflow import cashflow_summary
 from app.services.networth import (
+    account_trends,
     current_net_worth,
     display_value_map,
     latest_snapshot_map,
@@ -30,6 +31,7 @@ def index():
     )
     snapshots = latest_snapshot_map([a.id for a in active_accounts])
     values = display_value_map(active_accounts, snapshots)
+    trends = account_trends(active_accounts)
     summary = current_net_worth(active_accounts, snapshots)
     series = net_worth_series(active_accounts)
     chart_points = [
@@ -51,6 +53,7 @@ def index():
         summary=summary,
         accounts=active_accounts,
         values=values,
+        trends=trends,
         active_count=len(active_accounts),
         chart_points=chart_points,
         projection_points=projection_points,

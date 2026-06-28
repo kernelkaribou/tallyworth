@@ -145,6 +145,123 @@ def current_net_worth(
     return NetWorthSummary(assets_cents=assets, liabilities_cents=liabilities)
 
 
+@dataclass(frozen=True)
+class AccountTrend:
+    """Trend summary for one account's tile on the dashboard.
+
+    ``current_cents`` / ``previous_cents`` are the latest two display values
+    (equity for loan-tracking accounts, market value otherwise; liabilities keep
+    their positive magnitude). ``direction`` describes the raw movement of that
+    number, while ``improved`` says whether the change is good for net worth (so
+    a paid-down liability counts as an improvement even though the number fell).
+    ``spark_points`` is a ready-to-draw SVG polyline string over a 100x28 box.
+    """
+
+    direction: str  # "up" | "down" | "flat" | "none"
+    improved: bool | None
+    current_cents: int | None
+    previous_cents: int | None
+    delta_cents: int | None
+    spark_points: str | None
+
+    @property
+    def has_history(self) -> bool:
+        return self.previous_cents is not None
+
+
+_SPARK_WIDTH = 100.0
+_SPARK_HEIGHT = 28.0
+_SPARK_PAD = 3.0
+
+
+def _spark_polyline(values: list[int]) -> str | None:
+    """Normalise display values into an SVG polyline string over a 100x28 box."""
+    if len(values) < 2:
+        return None
+    lo = min(values)
+    hi = max(values)
+    span = hi - lo
+    usable = _SPARK_HEIGHT - 2 * _SPARK_PAD
+    step = _SPARK_WIDTH / (len(values) - 1)
+    coords = []
+    for i, v in enumerate(values):
+        x = i * step
+        if span == 0:
+            y = _SPARK_HEIGHT / 2
+        else:
+            y = _SPARK_PAD + (1 - (v - lo) / span) * usable
+        coords.append(f"{x:.1f},{y:.1f}")
+    return " ".join(coords)
+
+
+def account_trends(accounts: list[Account]) -> dict[int, AccountTrend]:
+    """Return {account_id: AccountTrend} for the given accounts.
+
+    All value snapshots are loaded in a single query and grouped per account, so
+    this is safe to call for the whole dashboard without N+1 queries. Accounts
+    with no snapshots get a "none" trend with no sparkline.
+    """
+    by_id = {a.id: a for a in accounts}
+    trends: dict[int, AccountTrend] = {}
+    if not by_id:
+        return trends
+
+    rows = db.session.execute(
+        select(
+            AccountValue.account_id,
+            AccountValue.value_cents,
+            AccountValue.loan_cents,
+        )
+        .where(AccountValue.account_id.in_(by_id.keys()))
+        .order_by(AccountValue.recorded_at.asc(), AccountValue.id.asc())
+    ).all()
+
+    series: dict[int, list[int]] = {aid: [] for aid in by_id}
+    for account_id, value_cents, loan_cents in rows:
+        account = by_id[account_id]
+        if account.account_type.tracks_loan:
+            display = value_cents - (loan_cents or 0)
+        else:
+            display = value_cents
+        series[account_id].append(display)
+
+    for account_id, values in series.items():
+        account = by_id[account_id]
+        is_liability = (
+            account.account_type.classification == Classification.liability
+        )
+        current = values[-1] if values else None
+        previous = values[-2] if len(values) >= 2 else None
+
+        if previous is None or current is None:
+            direction = "none"
+            improved: bool | None = None
+            delta: int | None = None
+        else:
+            delta = current - previous
+            if delta > 0:
+                direction = "up"
+            elif delta < 0:
+                direction = "down"
+            else:
+                direction = "flat"
+            if delta == 0:
+                improved = None
+            else:
+                # For liabilities a smaller balance is better; for assets larger.
+                improved = (delta < 0) if is_liability else (delta > 0)
+
+        trends[account_id] = AccountTrend(
+            direction=direction,
+            improved=improved,
+            current_cents=current,
+            previous_cents=previous,
+            delta_cents=delta,
+            spark_points=_spark_polyline(values),
+        )
+    return trends
+
+
 def net_worth_series(accounts: list[Account] | None = None) -> list[NetWorthPoint]:
     """Return net worth over time using a forward-fill of each account's value.
 
