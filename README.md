@@ -14,9 +14,10 @@ tracker, or a financial planning tool. It does not connect to your bank. You are
 in full control of the numbers you enter.
 
 <p>
-  <img src="docs/screenshot_1.jpeg" alt="Dashboard" width="32%"/>
-  <img src="docs/screenshot_2.jpeg" alt="Accounts" width="32%" />
-  <img src="docs/screenshot_3.jpeg" alt="Cashflow" width="32%" />
+  <img src="docs/screenshot_1.jpeg" alt="Dashboard" width="24%"/>
+  <img src="docs/screenshot_2.jpeg" alt="Accounts" width="24%" />
+    <img src="docs/screenshot_3.jpeg" alt="Account" width="24%" />
+  <img src="docs/screenshot_4.jpeg" alt="Cashflow" width="24%" />
 </p>
 
 ## What it does
@@ -136,9 +137,15 @@ Tallyworth is a Flask application. To run it locally without Docker:
 - **Security:** CSRF-protected forms (Flask-WTF) and a strict Content-Security-Policy
 - **Deploy:** single Docker image, one mounted volume, zero required config
 
+## Why This?
+
+Having used budgeting software for many years and doing the daily transaction entries and getting down to each individual expenditure, a point was reached where money habits were well established and became more interested in just loosely tracking larger networth values and investments. This could absolutely be a spreedsheet. 
+
+If you are interested in more budgeting type software to really get a grasp of your dollars check out some of the known ones out there like Actual Budget, Firefly III or YNAB (if you feel like paying for something).  
+
 ## Disclaimer
 
-AI was used heavily to create this project.
+AI was used heavily to create this project. As long as it is being used i will keep it maintained but at this point there is really no other updates needed unless a compelling feature comes up.
 
 Tallyworth is provided as-is for personal tracking. It is not financial advice.
 Any figures and summaries it shows are based solely on the numbers you enter.
