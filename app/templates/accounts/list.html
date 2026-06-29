@@ -24,7 +24,10 @@
     </thead>
     <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
       {% for account in accounts %}
-      <tr class="hover:bg-slate-50 dark:hover:bg-slate-700 {% if account.archived %}opacity-60{% endif %}">
+      <tr
+        data-row-href="{{ url_for('accounts.account_detail', account_id=account.id) }}"
+        class="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 {% if account.archived %}opacity-60{% endif %}"
+      >
         <td class="px-4 py-3">
           <a class="font-medium text-slate-900 dark:text-slate-100 hover:underline"
              href="{{ url_for('accounts.account_detail', account_id=account.id) }}">
