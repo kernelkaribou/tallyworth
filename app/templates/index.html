@@ -3,13 +3,14 @@
 
 {% block content %}
 <h1 class="sr-only">Dashboard</h1>
-{% if chart_points %}
-<section>
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h2 class="flex items-center gap-2 text-lg font-semibold">
-      Net Worth Summary
-      {{ info_tooltip("Based on active accounts only.") }}
+
+<section class="panel" aria-labelledby="networth-heading">
+  <div class="panel-header">
+    <h2 id="networth-heading" class="panel-title">
+      Net worth
+      {{ info_tooltip("Assets minus liabilities, across active accounts only.") }}
     </h2>
+    {% if chart_points %}
     <div id="networth-timeframe" role="group" aria-label="Chart timeframe" class="flex flex-wrap items-center gap-1">
       <button type="button" class="timeframe-btn" data-range="1m" aria-pressed="false">1M</button>
       <button type="button" class="timeframe-btn" data-range="3m" aria-pressed="false">3M</button>
@@ -19,191 +20,185 @@
       <button type="button" class="timeframe-btn" data-range="5y" aria-pressed="false">5Y</button>
       <button type="button" class="timeframe-btn" data-range="lifetime" aria-pressed="false">Lifetime</button>
     </div>
+    {% endif %}
   </div>
-  <p id="networth-summary" class="mt-2 text-sm text-slate-500 dark:text-slate-400"></p>
-  <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
-    <div class="h-72">
-      <canvas
-        id="networth-chart"
-        data-chart-source="networth-data"
-        data-timeframe-control="networth-timeframe"
-        data-default-range="1y"
-        data-summary-target="networth-summary"
-        data-symbol="{{ currency_symbol }}"
-        data-label="Net worth"
-        data-timezone="{{ display_timezone }}"
-      ></canvas>
+  <div class="panel-body space-y-4">
+    {% if chart_points %}
+    <div class="rounded-xl bg-slate-50 dark:bg-slate-900/40 p-3">
+      <p id="networth-summary" class="px-1 text-sm text-slate-500 dark:text-slate-400"></p>
+      <div class="mt-2 h-72">
+        <canvas
+          id="networth-chart"
+          data-chart-source="networth-data"
+          data-timeframe-control="networth-timeframe"
+          data-default-range="1y"
+          data-summary-target="networth-summary"
+          data-symbol="{{ currency_symbol }}"
+          data-label="Net worth"
+          data-timezone="{{ display_timezone }}"
+        ></canvas>
+      </div>
+      <script id="networth-data" type="application/json">{{ chart_points | tojson }}</script>
     </div>
-  </div>
-  <script id="networth-data" type="application/json">{{ chart_points | tojson }}</script>
-</section>
-{% endif %}
+    {% endif %}
 
-<section class="flex flex-col gap-3 sm:flex-row sm:items-stretch{% if chart_points %} mt-8{% endif %}">
-  <a
-    href="{{ url_for('accounts.list_accounts') }}"
-    class="card-interactive flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
-  >
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Assets</p>
-    <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-      {{ summary.assets_cents | money }}
-    </p>
-  </a>
-  <div class="hidden sm:flex items-center justify-center text-3xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">&minus;</div>
-  <a
-    href="{{ url_for('accounts.list_accounts') }}"
-    class="card-interactive flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
-  >
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Liabilities</p>
-    <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-      {{ summary.liabilities_cents | money }}
-    </p>
-  </a>
-  <div class="hidden sm:flex items-center justify-center text-3xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">=</div>
-  <div class="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-4 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Net worth</p>
-    <p class="mt-1 text-3xl font-bold tabular-nums
-      {% if summary.net_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-      {{ summary.net_cents | money }}
-    </p>
-  </div>
-</section>
-
-<section class="mt-8" aria-labelledby="cashflow-heading">
-  <h2 id="cashflow-heading" class="flex items-center gap-2 text-lg font-semibold">
-    Monthly cashflow
-    {{ info_tooltip("A month-to-month income vs. expense indicator. It does not affect your net worth.") }}
-  </h2>
-  {% if cashflow.has_entries %}
-  <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-stretch">
-    <a
-      href="{{ url_for('cashflow.list_cashflow') }}"
-      class="card-interactive flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm"
-    >
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Income</p>
-      <p class="mt-0.5 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-        {{ cashflow.income_cents | money }}
-      </p>
-    </a>
-    <div class="hidden sm:flex items-center justify-center text-2xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">&minus;</div>
-    <a
-      href="{{ url_for('cashflow.list_cashflow') }}"
-      class="card-interactive flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm"
-    >
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Expenses</p>
-      <p class="mt-0.5 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-        {{ cashflow.expense_cents | money }}
-      </p>
-    </a>
-    <div class="hidden sm:flex items-center justify-center text-2xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">=</div>
-    <div class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
-      <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Cashflow</p>
-      <p class="mt-0.5 text-xl font-semibold tabular-nums {% if cashflow.in_green %}text-slate-900 dark:text-slate-100{% else %}text-loss{% endif %}">
-        {{ cashflow.net_cents | money }}
-      </p>
-    </div>
-  </div>
-  {% else %}
-  <a
-    href="{{ url_for('cashflow.list_cashflow') }}"
-    class="card-interactive mt-3 block rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-4 text-sm text-slate-500 dark:text-slate-400"
-  >
-    Not set up yet. Add income and expenses to track your monthly cashflow.
-  </a>
-  {% endif %}
-</section>
-
-<section class="mt-8 flex items-center justify-between">
-  <h2 class="text-lg font-semibold">Accounts</h2>
-  <a
-    href="{{ url_for('accounts.new_account') }}"
-    class="btn-primary"
-  >
-    Add account
-  </a>
-</section>
-
-{% if accounts %}
-<div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-  {% for account in accounts %}
-  {% set trend = trends.get(account.id) %}
-  {% set is_liability = account.account_type.classification.value == 'liability' %}
-  <a
-    href="{{ url_for('accounts.account_detail', account_id=account.id) }}"
-    class="card-interactive group flex flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
-  >
-    <div class="flex items-start justify-between gap-2">
-      <div class="min-w-0">
-        <p class="truncate font-medium text-slate-900 dark:text-slate-100">
-          {{ account.name }}
+    <div class="metric-band">
+      <a href="{{ url_for('accounts.list_accounts') }}" class="metric-cell metric-cell-link">
+        <p class="metric-label">Assets</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          {{ summary.assets_cents | money }}
         </p>
-        <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-          {{ account.account_type.name }}
+      </a>
+      <div class="metric-op" aria-hidden="true">&minus;</div>
+      <a href="{{ url_for('accounts.list_accounts') }}" class="metric-cell metric-cell-link">
+        <p class="metric-label">Liabilities</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          {{ summary.liabilities_cents | money }}
+        </p>
+      </a>
+      <div class="metric-op" aria-hidden="true">=</div>
+      <div class="metric-cell-strong">
+        <p class="metric-label">Net worth</p>
+        <p class="mt-1 text-3xl font-bold tabular-nums
+          {% if summary.net_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+          {{ summary.net_cents | money }}
         </p>
       </div>
-      {% if trend and trend.direction in ('up', 'down') %}
-      {% set tone = 'text-gain' if trend.improved else 'text-loss' %}
-      <span
-        class="inline-flex shrink-0 items-center gap-1 text-xs font-medium {{ tone }}"
-        title="Change in net worth impact since the last value"
-      >
-        {% if trend.direction == 'up' %}
-        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="6 15 12 9 18 15" />
-        </svg>
-        {% else %}
-        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-        {% endif %}
-        <span class="sr-only">Net worth impact {{ 'up' if trend.improved else 'down' }} by </span>
-        {{ trend.delta_cents | abs | money }}
-      </span>
-      {% elif trend and trend.direction == 'flat' %}
-      <span class="shrink-0 text-xs font-medium text-flat" title="No change since last value">
-        no change
-      </span>
-      {% endif %}
     </div>
+  </div>
+</section>
 
-    <p class="mt-3 text-2xl font-semibold tabular-nums
-      {% if is_liability %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-      {{ values.get(account.id) | money }}{% if is_liability and values.get(account.id) is not none %}<span class="ml-1 text-sm font-normal text-slate-500 dark:text-slate-400">owed</span>{% endif %}
+<section class="panel mt-8" aria-labelledby="cashflow-heading">
+  <div class="panel-header">
+    <h2 id="cashflow-heading" class="panel-title">
+      Monthly cashflow
+      {{ info_tooltip("A month-to-month income vs. expense indicator. It does not affect your net worth.") }}
+    </h2>
+  </div>
+  <div class="panel-body">
+    {% if cashflow.has_entries %}
+    <div class="metric-band">
+      <a href="{{ url_for('cashflow.list_cashflow') }}" class="metric-cell metric-cell-link">
+        <p class="metric-label">Income</p>
+        <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          {{ cashflow.income_cents | money }}
+        </p>
+      </a>
+      <div class="metric-op" aria-hidden="true">&minus;</div>
+      <a href="{{ url_for('cashflow.list_cashflow') }}" class="metric-cell metric-cell-link">
+        <p class="metric-label">Expenses</p>
+        <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          {{ cashflow.expense_cents | money }}
+        </p>
+      </a>
+      <div class="metric-op" aria-hidden="true">=</div>
+      <div class="metric-cell-strong">
+        <p class="metric-label">Cashflow</p>
+        <p class="mt-1 text-xl font-semibold tabular-nums {% if cashflow.in_green %}text-slate-900 dark:text-slate-100{% else %}text-loss{% endif %}">
+          {{ cashflow.net_cents | money }}
+        </p>
+      </div>
+    </div>
+    {% else %}
+    <a
+      href="{{ url_for('cashflow.list_cashflow') }}"
+      class="card-interactive block rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 p-4 text-sm text-slate-500 dark:text-slate-400"
+    >
+      Not set up yet. Add income and expenses to track your monthly cashflow.
+    </a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel mt-8" aria-labelledby="accounts-heading">
+  <div class="panel-header">
+    <h2 id="accounts-heading" class="panel-title">Accounts</h2>
+    <a href="{{ url_for('accounts.new_account') }}" class="btn-primary">Add account</a>
+  </div>
+  <div class="panel-body">
+    {% if accounts %}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {% for account in accounts %}
+      {% set trend = trends.get(account.id) %}
+      {% set is_liability = account.account_type.classification.value == 'liability' %}
+      <a
+        href="{{ url_for('accounts.account_detail', account_id=account.id) }}"
+        class="card-interactive group flex flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
+      >
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="truncate font-medium text-slate-900 dark:text-slate-100">
+              {{ account.name }}
+            </p>
+            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              {{ account.account_type.name }}
+            </p>
+          </div>
+          {% if trend and trend.direction in ('up', 'down') %}
+          {% set tone = 'text-gain' if trend.improved else 'text-loss' %}
+          <span
+            class="inline-flex shrink-0 items-center gap-1 text-xs font-medium {{ tone }}"
+            title="Change in net worth impact since the last value"
+          >
+            {% if trend.direction == 'up' %}
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 15 12 9 18 15" />
+            </svg>
+            {% else %}
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            {% endif %}
+            <span class="sr-only">Net worth impact {{ 'up' if trend.improved else 'down' }} by </span>
+            {{ trend.delta_cents | abs | money }}
+          </span>
+          {% elif trend and trend.direction == 'flat' %}
+          <span class="shrink-0 text-xs font-medium text-flat" title="No change since last value">
+            no change
+          </span>
+          {% endif %}
+        </div>
+
+        <p class="mt-3 text-2xl font-semibold tabular-nums
+          {% if is_liability %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+          {{ values.get(account.id) | money }}{% if is_liability and values.get(account.id) is not none %}<span class="ml-1 text-sm font-normal text-slate-500 dark:text-slate-400">owed</span>{% endif %}
+        </p>
+
+        <div class="mt-3 h-7">
+          {% if trend and trend.spark_points %}
+          {% set spark_tone = 'text-gain' if trend.improved else ('text-loss' if trend.improved is sameas false else 'text-flat') %}
+          <svg
+            class="h-7 w-full {{ spark_tone }}"
+            viewBox="0 0 100 28"
+            preserveAspectRatio="none"
+            fill="none"
+            aria-hidden="true"
+          >
+            <polyline
+              points="{{ trend.spark_points }}"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              vector-effect="non-scaling-stroke"
+            />
+          </svg>
+          {% else %}
+          <p class="text-xs text-slate-400 dark:text-slate-500">
+            {% if values.get(account.id) is none %}No value recorded yet{% else %}Add another value to see a trend{% endif %}
+          </p>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 p-8 text-center text-slate-500 dark:text-slate-400">
+      No accounts yet. Add your first account to start tracking your net worth.
     </p>
-
-    <div class="mt-3 h-7">
-      {% if trend and trend.spark_points %}
-      {% set spark_tone = 'text-gain' if trend.improved else ('text-loss' if trend.improved is sameas false else 'text-flat') %}
-      <svg
-        class="h-7 w-full {{ spark_tone }}"
-        viewBox="0 0 100 28"
-        preserveAspectRatio="none"
-        fill="none"
-        aria-hidden="true"
-      >
-        <polyline
-          points="{{ trend.spark_points }}"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          vector-effect="non-scaling-stroke"
-        />
-      </svg>
-      {% else %}
-      <p class="text-xs text-slate-400 dark:text-slate-500">
-        {% if values.get(account.id) is none %}No value recorded yet{% else %}Add another value to see a trend{% endif %}
-      </p>
-      {% endif %}
-    </div>
-  </a>
-  {% endfor %}
-</div>
-{% else %}
-<p class="mt-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-8 text-center text-slate-500 dark:text-slate-400">
-  No accounts yet. Add your first account to start tracking your net worth.
-</p>
-{% endif %}
+    {% endif %}
+  </div>
+</section>
 {% endblock %}
 
 {% block scripts %}
