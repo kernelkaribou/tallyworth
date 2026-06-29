@@ -3,38 +3,8 @@
 
 {% block content %}
 <h1 class="sr-only">Dashboard</h1>
-<section class="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-  <a
-    href="{{ url_for('accounts.list_accounts') }}"
-    class="card-interactive flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
-  >
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Assets</p>
-    <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-      {{ summary.assets_cents | money }}
-    </p>
-  </a>
-  <div class="hidden sm:flex items-center justify-center text-3xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">&minus;</div>
-  <a
-    href="{{ url_for('accounts.list_accounts') }}"
-    class="card-interactive flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
-  >
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Liabilities</p>
-    <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-      {{ summary.liabilities_cents | money }}
-    </p>
-  </a>
-  <div class="hidden sm:flex items-center justify-center text-3xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">=</div>
-  <div class="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-4 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Net worth</p>
-    <p class="mt-1 text-3xl font-bold tabular-nums
-      {% if summary.net_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-      {{ summary.net_cents | money }}
-    </p>
-  </div>
-</section>
-
 {% if chart_points %}
-<section class="mt-8">
+<section>
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h2 class="flex items-center gap-2 text-lg font-semibold">
       Net Worth Summary
@@ -68,6 +38,36 @@
   <script id="networth-data" type="application/json">{{ chart_points | tojson }}</script>
 </section>
 {% endif %}
+
+<section class="flex flex-col gap-3 sm:flex-row sm:items-stretch{% if chart_points %} mt-8{% endif %}">
+  <a
+    href="{{ url_for('accounts.list_accounts') }}"
+    class="card-interactive flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
+  >
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Assets</p>
+    <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+      {{ summary.assets_cents | money }}
+    </p>
+  </a>
+  <div class="hidden sm:flex items-center justify-center text-3xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">&minus;</div>
+  <a
+    href="{{ url_for('accounts.list_accounts') }}"
+    class="card-interactive flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
+  >
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Liabilities</p>
+    <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+      {{ summary.liabilities_cents | money }}
+    </p>
+  </a>
+  <div class="hidden sm:flex items-center justify-center text-3xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">=</div>
+  <div class="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-4 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Net worth</p>
+    <p class="mt-1 text-3xl font-bold tabular-nums
+      {% if summary.net_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+      {{ summary.net_cents | money }}
+    </p>
+  </div>
+</section>
 
 <section class="mt-8" aria-labelledby="cashflow-heading">
   <h2 id="cashflow-heading" class="flex items-center gap-2 text-lg font-semibold">
