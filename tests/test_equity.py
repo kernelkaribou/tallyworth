@@ -44,7 +44,7 @@ def test_equity_can_be_negative_when_underwater(app):
         assert car.signed_value_cents == -500000
 
 
-def test_net_worth_uses_equity_for_loan_accounts(app):
+def test_net_worth_grosses_up_loan_accounts(app):
     with app.app_context():
         house = _loan_account()
         house.values.append(AccountValue(value_cents=30000000, loan_cents=18000000))
@@ -56,10 +56,25 @@ def test_net_worth_uses_equity_for_loan_accounts(app):
         db.session.commit()
 
         summary = current_net_worth()
-        # 12,000,000 equity + 500,000 checking
-        assert summary.assets_cents == 12500000
-        assert summary.liabilities_cents == 0
+        # Gross: full market value (30,000,000) + checking (500,000) in assets,
+        # loan (18,000,000) in liabilities; net is unchanged equity + checking.
+        assert summary.assets_cents == 30500000
+        assert summary.liabilities_cents == 18000000
         assert summary.net_cents == 12500000
+
+
+def test_net_worth_underwater_loan_account(app):
+    with app.app_context():
+        car = _loan_account(name="Car", type_name="Vehicle (Equity)")
+        car.values.append(AccountValue(value_cents=1500000, loan_cents=2000000))
+        db.session.commit()
+
+        summary = current_net_worth()
+        # Underwater: market value is an asset, the larger loan a liability, so
+        # net worth goes negative without any negative asset figure.
+        assert summary.assets_cents == 1500000
+        assert summary.liabilities_cents == 2000000
+        assert summary.net_cents == -500000
 
 
 def test_display_value_map_shows_equity(app):
@@ -227,3 +242,42 @@ def test_loan_input_prefilled_with_latest_balance(client, app):
         account_id = Account.query.filter_by(name="Townhouse").one().id
     resp = client.get(f"/accounts/{account_id}")
     assert b'value="120000.00"' in resp.data
+
+
+def test_dashboard_shows_equity_for_loan_account(client, app):
+    with app.app_context():
+        type_id = AccountType.query.filter_by(name="Property (Equity)").first().id
+    client.post(
+        "/accounts",
+        data={
+            "name": "Bungalow",
+            "account_type_id": type_id,
+            "initial_value": "400000",
+            "initial_loan": "300000",
+        },
+        follow_redirects=True,
+    )
+    body = client.get("/").get_data(as_text=True)
+    # The account tile shows equity (value - loan), not the market value.
+    assert "100,000.00" in body
+    assert "300,000.00 loan" not in body
+    assert "100,000.00 equity" not in body
+
+
+def test_accounts_list_shows_equity_for_loan_account(client, app):
+    with app.app_context():
+        type_id = AccountType.query.filter_by(name="Property (Equity)").first().id
+    client.post(
+        "/accounts",
+        data={
+            "name": "Bungalow",
+            "account_type_id": type_id,
+            "initial_value": "400000",
+            "initial_loan": "300000",
+        },
+        follow_redirects=True,
+    )
+    body = client.get("/accounts").get_data(as_text=True)
+    # Current value column shows equity, not the full market value.
+    assert "100,000.00" in body
+    assert "400,000.00" not in body

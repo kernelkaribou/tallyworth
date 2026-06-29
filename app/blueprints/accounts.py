@@ -40,7 +40,8 @@ def list_accounts():
         .order_by(Account.archived, Account.name)
         .all()
     )
-    values = display_value_map(accounts)
+    snapshots = latest_snapshot_map([a.id for a in accounts])
+    values = display_value_map(accounts, snapshots)
     return render_template(
         "accounts/list.html",
         accounts=accounts,

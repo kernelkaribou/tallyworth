@@ -3,133 +3,137 @@
 
 {% block content %}
 {% set is_liability = account.account_type.classification.value == 'liability' %}
-<section class="flex flex-wrap items-start justify-between gap-4">
-  <div>
-    <h1 class="text-xl font-semibold">{{ account.name }}</h1>
-    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-      {{ account.account_type.name }} ({{ account.account_type.classification.value }})
-      {% if account.archived %}
-        <span class="ml-2 rounded bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs">Closed</span>
+<h1 class="sr-only">{{ account.name }}</h1>
+
+<div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+  <section class="panel" aria-labelledby="account-heading">
+    <div class="panel-header items-start">
+      <div class="min-w-0">
+        <h2 id="account-heading" class="panel-title truncate">{{ account.name }}</h2>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          {{ account.account_type.name }} ({{ account.account_type.classification.value }})
+          {% if account.archived %}
+          <span class="ml-2 rounded bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs">Closed</span>
+          {% endif %}
+        </p>
+      </div>
+      <div class="flex shrink-0 flex-wrap items-center gap-2">
+        <a
+          href="{{ url_for('accounts.edit_account', account_id=account.id) }}"
+          class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+        >
+          Edit
+        </a>
+        <form method="post" action="{{ url_for('accounts.toggle_archive', account_id=account.id) }}"
+          {% if not account.archived %}
+          data-confirm="Closing {{ account.name }} hides it from your dashboard and net worth total. You can reopen it at any time."
+          data-confirm-title="Close this account?"
+          data-confirm-label="Close account"
+          data-confirm-tone="default"
+          {% endif %}
+        >
+          {{ csrf_field() }}
+          <button
+            type="submit"
+            class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+          >
+            {{ "Reopen" if account.archived else "Close" }}
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="panel-body">
+      {% if account.tracks_loan %}
+      <div class="metric-band">
+        <div class="metric-cell">
+          <p class="metric-label">Market value</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+            {{ account.current_value_cents | money }}
+          </p>
+        </div>
+        <div class="metric-op" aria-hidden="true">&minus;</div>
+        <div class="metric-cell">
+          <p class="metric-label">Loan balance</p>
+          <p class="mt-1 text-2xl font-semibold tabular-nums text-loss">
+            {{ account.current_loan_cents | money }}
+          </p>
+        </div>
+        <div class="metric-op" aria-hidden="true">=</div>
+        <div class="metric-cell-strong">
+          <p class="metric-label">Equity</p>
+          <p class="mt-1 text-2xl font-bold tabular-nums
+            {% if account.equity_cents is not none and account.equity_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+            {{ account.equity_cents | money }}
+          </p>
+        </div>
+      </div>
+      {% elif is_liability %}
+      <p class="metric-label">Balance owed</p>
+      <p class="mt-1 text-3xl font-semibold tabular-nums text-loss">
+        {{ account.current_value_cents | money }}
+      </p>
+      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Net worth impact
+        <span class="font-medium text-loss">{{ account.signed_value_cents | money }}</span>
+      </p>
+      {% else %}
+      <p class="metric-label">Current value</p>
+      <p class="mt-1 text-3xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+        {{ account.current_value_cents | money }}
+      </p>
       {% endif %}
-    </p>
-  </div>
-  <div class="flex items-center gap-2">
-    <a
-      href="{{ url_for('accounts.edit_account', account_id=account.id) }}"
-      class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
-    >
-      Edit
-    </a>
-    <form method="post" action="{{ url_for('accounts.toggle_archive', account_id=account.id) }}"
-      {% if not account.archived %}
-      data-confirm="Closing {{ account.name }} hides it from your dashboard and net worth total. You can reopen it at any time."
-      data-confirm-title="Close this account?"
-      data-confirm-label="Close account"
-      data-confirm-tone="default"
-      {% endif %}
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="record-heading">
+    <div class="panel-header">
+      <h2 id="record-heading" class="panel-title">
+        {% if account.tracks_loan %}Record value &amp; loan{% else %}Record a value{% endif %}
+      </h2>
+    </div>
+    <form
+      method="post"
+      action="{{ url_for('accounts.add_value', account_id=account.id) }}"
+      class="panel-body"
     >
       {{ csrf_field() }}
-      <button
-        type="submit"
-        class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
-      >
-        {{ "Reopen" if account.archived else "Close" }}
-      </button>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="value">
+        {% if account.tracks_loan %}Market value{% else %}New value{% endif %}
+      </label>
+      <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
+        <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
+        <input
+          id="value"
+          name="value"
+          type="text"
+          inputmode="decimal"
+          required
+          class="w-full px-2 py-2 text-sm focus:outline-none dark:bg-transparent"
+          placeholder="{% if account.tracks_loan %}Market value{% else %}0.00{% endif %}"
+        />
+      </div>
+      {% if account.tracks_loan %}
+      <label class="mt-3 block text-sm font-medium text-slate-700 dark:text-slate-200" for="loan">Loan balance</label>
+      <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
+        <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
+        <input
+          id="loan"
+          name="loan"
+          type="text"
+          inputmode="decimal"
+          required
+          value="{% if account.current_loan_cents is not none %}{{ '%.2f'|format(account.current_loan_cents / 100) }}{% endif %}"
+          class="w-full px-2 py-2 text-sm focus:outline-none dark:bg-transparent"
+          placeholder="0 if owned outright"
+        />
+      </div>
+      {% endif %}
+      <button type="submit" class="mt-3 btn-primary">Save value</button>
     </form>
-  </div>
-</section>
+  </section>
+</div>
 
-<section class="mt-6 grid gap-4 sm:grid-cols-2">
-  {% if account.tracks_loan %}
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:col-span-2">
-    <div class="grid gap-4 sm:grid-cols-3">
-      <div>
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Market value</p>
-        <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-          {{ account.current_value_cents | money }}
-        </p>
-      </div>
-      <div>
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Loan balance</p>
-        <p class="mt-1 text-2xl font-semibold tabular-nums text-loss">
-          {{ account.current_loan_cents | money }}
-        </p>
-      </div>
-      <div>
-        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Equity</p>
-        <p class="mt-1 text-2xl font-semibold tabular-nums
-          {% if account.equity_cents is not none and account.equity_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-          {{ account.equity_cents | money }}
-        </p>
-      </div>
-    </div>
-  </div>
-  {% elif is_liability %}
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Balance owed</p>
-    <p class="mt-1 text-3xl font-semibold tabular-nums text-loss">
-      {{ account.current_value_cents | money }}
-    </p>
-    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-      Net worth impact
-      <span class="font-medium text-loss">{{ account.signed_value_cents | money }}</span>
-    </p>
-  </div>
-  {% else %}
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Current value</p>
-    <p class="mt-1 text-3xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-      {{ account.current_value_cents | money }}
-    </p>
-  </div>
-  {% endif %}
-
-  <form
-    method="post"
-    action="{{ url_for('accounts.add_value', account_id=account.id) }}"
-    class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
-  >
-    {{ csrf_field() }}
-    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="value">
-      {% if account.tracks_loan %}Record market value &amp; loan{% else %}Record a new value{% endif %}
-    </label>
-    <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
-      <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
-      <input
-        id="value"
-        name="value"
-        type="text"
-        inputmode="decimal"
-        required
-        class="w-full px-2 py-2 text-sm focus:outline-none"
-        placeholder="{% if account.tracks_loan %}Market value{% else %}0.00{% endif %}"
-      />
-    </div>
-    {% if account.tracks_loan %}
-    <div class="mt-2 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
-      <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
-      <input
-        id="loan"
-        name="loan"
-        type="text"
-        inputmode="decimal"
-        required
-        value="{% if account.current_loan_cents is not none %}{{ '%.2f'|format(account.current_loan_cents / 100) }}{% endif %}"
-        class="w-full px-2 py-2 text-sm focus:outline-none"
-        placeholder="Loan balance (0 if owned outright)"
-      />
-    </div>
-    {% endif %}
-    <button
-      type="submit"
-      class="mt-3 btn-primary"
-    >
-      Save value
-    </button>
-  </form>
-</section>
-
-<section class="mt-8">
+<section class="panel mt-8" aria-labelledby="history-heading">
   {% if history %}
   {% if account.tracks_loan %}
     {% set chart_help = "Equity (market value minus the outstanding loan) over time." %}
@@ -138,8 +142,8 @@
   {% else %}
     {% set chart_help = "Account value over time." %}
   {% endif %}
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h2 class="flex items-center gap-2 text-lg font-semibold">
+  <div class="panel-header">
+    <h2 id="history-heading" class="panel-title">
       History
       {{ info_tooltip(chart_help) }}
     </h2>
@@ -153,24 +157,26 @@
       <button type="button" class="timeframe-btn" data-range="lifetime" aria-pressed="false">Lifetime</button>
     </div>
   </div>
-  <p id="account-history-summary" class="mt-2 text-sm text-slate-500 dark:text-slate-400"></p>
-  <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
-    <div class="h-72">
-      <canvas
-        id="account-history-chart"
-        data-chart-source="account-history-data"
-        data-timeframe-control="account-timeframe"
-        data-default-range="1y"
-        data-summary-target="account-history-summary"
-        data-symbol="{{ currency_symbol }}"
-        {% if show_baseline %}data-baseline="zero"{% endif %}
-        data-label="{% if account.tracks_loan %}Equity{% elif is_liability %}Net worth impact{% else %}Value{% endif %}"
-        data-timezone="{{ display_timezone }}"
-      ></canvas>
+  <div class="panel-body space-y-2">
+    <p id="account-history-summary" class="px-1 text-sm text-slate-500 dark:text-slate-400"></p>
+    <div class="rounded-xl bg-slate-50 dark:bg-slate-900/40 p-3">
+      <div class="h-72">
+        <canvas
+          id="account-history-chart"
+          data-chart-source="account-history-data"
+          data-timeframe-control="account-timeframe"
+          data-default-range="1y"
+          data-summary-target="account-history-summary"
+          data-symbol="{{ currency_symbol }}"
+          {% if show_baseline %}data-baseline="zero"{% endif %}
+          data-label="{% if account.tracks_loan %}Equity{% elif is_liability %}Net worth impact{% else %}Value{% endif %}"
+          data-timezone="{{ display_timezone }}"
+        ></canvas>
+      </div>
     </div>
+    <script id="account-history-data" type="application/json">{{ chart_points | tojson }}</script>
   </div>
-  <script id="account-history-data" type="application/json">{{ chart_points | tojson }}</script>
-  <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+  <div class="overflow-x-auto border-t border-slate-200 dark:border-slate-700">
     <table class="w-full text-sm">
       <thead class="bg-slate-50 dark:bg-slate-900/40 text-left text-slate-500 dark:text-slate-400">
         <tr>
@@ -226,10 +232,14 @@
     </table>
   </div>
   {% else %}
-  <h2 class="text-lg font-semibold">History</h2>
-  <p class="mt-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-6 text-center text-slate-500 dark:text-slate-400">
-    No values recorded yet.
-  </p>
+  <div class="panel-header">
+    <h2 id="history-heading" class="panel-title">History</h2>
+  </div>
+  <div class="panel-body">
+    <p class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 p-6 text-center text-slate-500 dark:text-slate-400">
+      No values recorded yet.
+    </p>
+  </div>
   {% endif %}
 </section>
 {% endblock %}
