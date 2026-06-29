@@ -72,7 +72,7 @@
   <div class="panel-header">
     <h2 id="cashflow-heading" class="panel-title">
       Monthly cashflow
-      {{ info_tooltip("A month-to-month income vs. expense indicator. It does not affect your net worth.") }}
+      {{ info_tooltip("A month-to-month income vs. expense indicator. Not calculated into net worth.") }}
     </h2>
   </div>
   <div class="panel-body">
@@ -117,54 +117,24 @@
   </div>
   <div class="panel-body">
     {% if accounts %}
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="divide-y divide-slate-200 dark:divide-slate-700">
       {% for account in accounts %}
       {% set trend = trends.get(account.id) %}
       {% set is_liability = account.account_type.classification.value == 'liability' %}
       <a
         href="{{ url_for('accounts.account_detail', account_id=account.id) }}"
-        class="card-interactive group flex flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
+        class="card-interactive group flex items-center gap-4 -mx-2 rounded-lg px-2 py-3"
       >
-        <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0">
-            <p class="truncate font-medium text-slate-900 dark:text-slate-100">
-              {{ account.name }}
-            </p>
-            <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              {{ account.account_type.name }}
-            </p>
-          </div>
-          {% if trend and trend.direction in ('up', 'down') %}
-          {% set tone = 'text-gain' if trend.improved else 'text-loss' %}
-          <span
-            class="inline-flex shrink-0 items-center gap-1 text-xs font-medium {{ tone }}"
-            title="Change in net worth impact since the last value"
-          >
-            {% if trend.direction == 'up' %}
-            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="6 15 12 9 18 15" />
-            </svg>
-            {% else %}
-            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-            {% endif %}
-            <span class="sr-only">Net worth impact {{ 'up' if trend.improved else 'down' }} by </span>
-            {{ trend.delta_cents | abs | money }}
-          </span>
-          {% elif trend and trend.direction == 'flat' %}
-          <span class="shrink-0 text-xs font-medium text-flat" title="No change since last value">
-            no change
-          </span>
-          {% endif %}
+        <div class="min-w-0 flex-1">
+          <p class="truncate font-medium text-slate-900 dark:text-slate-100">
+            {{ account.name }}
+          </p>
+          <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+            {{ account.account_type.name }}
+          </p>
         </div>
 
-        <p class="mt-3 text-2xl font-semibold tabular-nums
-          {% if is_liability %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-          {{ values.get(account.id) | money }}{% if is_liability and values.get(account.id) is not none %}<span class="ml-1 text-sm font-normal text-slate-500 dark:text-slate-400">owed</span>{% endif %}
-        </p>
-
-        <div class="mt-3 h-7">
+        <div class="hidden h-7 w-24 shrink-0 md:block">
           {% if trend and trend.spark_points %}
           {% set spark_tone = 'text-gain' if trend.improved else ('text-loss' if trend.improved is sameas false else 'text-flat') %}
           <svg
@@ -183,11 +153,40 @@
               vector-effect="non-scaling-stroke"
             />
           </svg>
-          {% else %}
-          <p class="text-xs text-slate-400 dark:text-slate-500">
-            {% if values.get(account.id) is none %}No value recorded yet{% else %}Add another value to see a trend{% endif %}
-          </p>
           {% endif %}
+        </div>
+
+        <div class="hidden w-28 shrink-0 text-right sm:block">
+          {% if trend and trend.direction in ('up', 'down') %}
+          {% set tone = 'text-gain' if trend.improved else 'text-loss' %}
+          <span
+            class="inline-flex items-center gap-1 text-xs font-medium {{ tone }}"
+            title="Change in net worth impact since the last value"
+          >
+            {% if trend.direction == 'up' %}
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 15 12 9 18 15" />
+            </svg>
+            {% else %}
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+            {% endif %}
+            <span class="sr-only">Net worth impact {{ 'up' if trend.improved else 'down' }} by </span>
+            {{ trend.delta_cents | abs | money }}
+          </span>
+          {% elif trend and trend.direction == 'flat' %}
+          <span class="text-xs font-medium text-flat" title="No change since last value">
+            no change
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="w-32 shrink-0 text-right sm:w-36">
+          <p class="text-lg font-semibold tabular-nums
+            {% if is_liability %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+            {{ values.get(account.id) | money }}{% if is_liability and values.get(account.id) is not none %}<span class="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400">owed</span>{% endif %}
+          </p>
         </div>
       </a>
       {% endfor %}
