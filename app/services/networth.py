@@ -1,8 +1,11 @@
 """Net worth calculations.
 
-Current net worth is the sum of each active account's latest value, where
-liabilities count as negative. Accounts with no recorded value contribute zero.
-Archived accounts are excluded from the current figure.
+Current net worth is assets minus liabilities across active accounts.
+Liability accounts add to liabilities; ordinary asset accounts add to assets;
+loan-tracking assets (e.g. a house) add their full market value to assets and
+their outstanding loan balance to liabilities (a gross balance sheet). Accounts
+with no recorded value contribute nothing. Archived accounts are excluded from
+the current figure.
 """
 from __future__ import annotations
 
@@ -83,8 +86,11 @@ def display_value_map(
     accounts: list[Account],
     snapshots: dict[int, tuple[int, int | None]] | None = None,
 ) -> dict[int, int]:
-    """Per-account value to display: equity for loan accounts, else market value.
+    """Per-account primary figure: each account's gross market value.
 
+    Loan-tracking accounts show their full market value (the asset side); the
+    loan is surfaced separately via :func:`loan_balance_map` so the UI can show
+    it as a liability and reconcile with the gross net-worth summary.
     Liabilities keep their positive magnitude (the UI colours them separately).
     """
     if snapshots is None:
@@ -94,11 +100,31 @@ def display_value_map(
         snap = snapshots.get(account.id)
         if snap is None:
             continue
-        value_cents, loan_cents = snap
-        if account.account_type.tracks_loan:
-            result[account.id] = value_cents - (loan_cents or 0)
-        else:
-            result[account.id] = value_cents
+        value_cents, _loan_cents = snap
+        result[account.id] = value_cents
+    return result
+
+
+def loan_balance_map(
+    accounts: list[Account],
+    snapshots: dict[int, tuple[int, int | None]] | None = None,
+) -> dict[int, int]:
+    """Outstanding loan balance per loan-tracking account.
+
+    Only loan-tracking accounts with a recorded snapshot appear in the map; the
+    loan counts as a liability in the gross net-worth summary.
+    """
+    if snapshots is None:
+        snapshots = latest_snapshot_map([a.id for a in accounts])
+    result: dict[int, int] = {}
+    for account in accounts:
+        if not account.account_type.tracks_loan:
+            continue
+        snap = snapshots.get(account.id)
+        if snap is None:
+            continue
+        _value_cents, loan_cents = snap
+        result[account.id] = loan_cents or 0
     return result
 
 
@@ -130,7 +156,11 @@ def current_net_worth(
         if account.account_type.classification == Classification.liability:
             liabilities += value_cents
         elif account.account_type.tracks_loan:
-            assets += value_cents - (loan_cents or 0)
+            # Gross balance sheet: the asset's full market value counts toward
+            # assets and its outstanding loan toward liabilities. Net worth is
+            # unchanged (value - loan), but the loan is no longer masked.
+            assets += value_cents
+            liabilities += loan_cents or 0
         else:
             assets += value_cents
     return NetWorthSummary(assets_cents=assets, liabilities_cents=liabilities)

@@ -21,6 +21,7 @@ from app.models.account_type import AccountType, Classification
 from app.services.networth import (
     display_value_map,
     latest_snapshot_map,
+    loan_balance_map,
     net_worth_impact_cents,
 )
 
@@ -40,11 +41,14 @@ def list_accounts():
         .order_by(Account.archived, Account.name)
         .all()
     )
-    values = display_value_map(accounts)
+    snapshots = latest_snapshot_map([a.id for a in accounts])
+    values = display_value_map(accounts, snapshots)
+    loans = loan_balance_map(accounts, snapshots)
     return render_template(
         "accounts/list.html",
         accounts=accounts,
         values=values,
+        loans=loans,
         account_types=_ordered_types(),
     )
 

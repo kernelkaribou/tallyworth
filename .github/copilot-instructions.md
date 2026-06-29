@@ -27,8 +27,13 @@ net worth figure, charts, and a per-timeframe net worth change summary.
   non-numeric, scientific notation, inf/nan, >2 decimals, and absurdly large values). Liability
   account values must be non-negative (amount owed); asset accounts may go negative (overdraft).
 - Money is stored as INTEGER CENTS. Never use floats for money.
-- Net worth = sum of latest account values, where liabilities are negative, plus asset equity
-  (market value minus loan balance). Income/expenses are a SEPARATE monthly cashflow indicator
+- Net worth = assets minus liabilities (a gross balance sheet). Liability accounts add to
+  liabilities; ordinary assets add to assets; loan-tracking assets (Property/Vehicle) add their
+  full market value to assets AND their loan balance to liabilities, so the loan is never masked
+  and an underwater asset drives net worth negative without a negative asset figure. The net figure
+  equals each asset's equity (value minus loan). `display_value_map` returns the gross market value
+  per account; `loan_balance_map` returns the loan portion for loan-tracking accounts so the UI can
+  show it as a liability sub-line. Income/expenses are a SEPARATE monthly cashflow indicator
   and do NOT feed the net worth figure.
 - Accounts use a unified `account` table with an `account_type`. Account types have a
   `classification` (asset or liability) and a `tracks_loan` flag (equity types like
