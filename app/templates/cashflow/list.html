@@ -97,48 +97,56 @@
 {% endmacro %}
 
 {% block content %}
-<section>
-  <h1 class="flex items-center gap-2 text-xl font-semibold">
-    Monthly cashflow
-    {{ info_tooltip("A light view of money in versus money out. Amounts are typical monthly figures, not transactions. This does not affect your net worth or account liabilities.") }}
-  </h1>
-</section>
+<h1 class="sr-only">Monthly cashflow</h1>
 
-<section class="mt-6 grid gap-4 sm:grid-cols-3">
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Income</p>
-    <p class="mt-1 text-2xl font-semibold text-gain">
-      {{ summary.income_cents | money }}
-    </p>
+<section class="panel" aria-labelledby="cashflow-heading">
+  <div class="panel-header">
+    <h2 id="cashflow-heading" class="panel-title">
+      Monthly cashflow
+      {{ info_tooltip("A light view of money in versus money out. Amounts are typical monthly figures, not transactions. This does not affect your net worth or account liabilities.") }}
+    </h2>
   </div>
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Expenses</p>
-    <p class="mt-1 text-2xl font-semibold text-loss">
-      {{ summary.expense_cents | money }}
-    </p>
-  </div>
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
-      {% if summary.in_green %}In the green{% else %}In the red{% endif %}
-    </p>
-    <p class="mt-1 text-2xl font-semibold {% if summary.in_green %}text-gain{% else %}text-loss{% endif %}">
-      {{ summary.net_cents | money }}
-    </p>
+  <div class="panel-body">
+    <div class="metric-band">
+      <div class="metric-cell">
+        <p class="metric-label">Income</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-gain">
+          {{ summary.income_cents | money }}
+        </p>
+      </div>
+      <div class="metric-op" aria-hidden="true">&minus;</div>
+      <div class="metric-cell">
+        <p class="metric-label">Expenses</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-loss">
+          {{ summary.expense_cents | money }}
+        </p>
+      </div>
+      <div class="metric-op" aria-hidden="true">=</div>
+      <div class="metric-cell-strong">
+        <p class="metric-label">Cashflow</p>
+        <p class="mt-1 text-2xl font-bold tabular-nums {% if summary.in_green %}text-gain{% else %}text-loss{% endif %}">
+          {{ summary.net_cents | money }}
+        </p>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          {% if summary.in_green %}In the green{% else %}In the red{% endif %}
+        </p>
+      </div>
+    </div>
   </div>
 </section>
 
 <section class="mt-8 grid gap-6 lg:grid-cols-2">
-  <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-    <h2 class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-      Income
-    </h2>
+  <div class="panel" aria-labelledby="income-heading">
+    <div class="panel-header">
+      <h2 id="income-heading" class="panel-title">Income</h2>
+    </div>
     {{ add_form("income", "Income") }}
     {{ entry_rows(income, "text-gain") }}
   </div>
-  <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-    <h2 class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-      Expenses
-    </h2>
+  <div class="panel" aria-labelledby="expenses-heading">
+    <div class="panel-header">
+      <h2 id="expenses-heading" class="panel-title">Expenses</h2>
+    </div>
     {{ add_form("expense", "Expense") }}
     {{ entry_rows(expenses, "text-loss") }}
   </div>
