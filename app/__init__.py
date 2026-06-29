@@ -144,17 +144,14 @@ def _ensure_data_dir(app: Flask) -> None:
 
 
 def _ensure_secret_key(app: Flask) -> None:
-    """Use an explicit SECRET_KEY when given, else auto-provision a persistent one.
+    """Auto-provision a persistent secret key next to the database.
 
-    Tallyworth has no user accounts; the secret only signs session cookies and
-    CSRF tokens for this single self-hosted instance. Rather than make operators
-    generate and manage a key, we persist a strong random one next to the
-    database (in DATA_DIR) so it survives restarts while keeping deployment to
-    "mount a data volume." Set the SECRET_KEY environment variable to override
-    (for example to share one secret across multiple replicas).
+    Tallyworth has no user accounts and is a single self-hosted instance; the
+    secret only signs session cookies and CSRF tokens for this one process.
+    Rather than make operators generate and manage a key, we persist a strong
+    random one in DATA_DIR so it survives restarts while keeping deployment to
+    "mount a data volume."
     """
-    if app.config.get("SECRET_KEY"):
-        return
     if app.config.get("TESTING"):
         app.config["SECRET_KEY"] = "testing-only-secret"
         return

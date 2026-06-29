@@ -59,15 +59,3 @@ def test_empty_secret_key_file_is_regenerated(tmp_path):
     (tmp_path / "secret_key").write_text("x")
     app2 = create_app(DiskConfig)
     assert len(app2.config["SECRET_KEY"]) >= 32
-
-
-def test_explicit_secret_key_overrides_autoprovision(tmp_path):
-    class SecureConfig(Config):
-        TESTING = False
-        DATA_DIR = tmp_path
-        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-        SECRET_KEY = "a-strong-secret-value"
-
-    app = create_app(SecureConfig)
-    assert app.config["SECRET_KEY"] == "a-strong-secret-value"
-    assert not (tmp_path / "secret_key").exists()

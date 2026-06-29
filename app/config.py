@@ -11,10 +11,10 @@ DATA_DIR = Path(os.environ.get("TALLYWORTH_DATA_DIR", BASE_DIR / "data"))
 class Config:
     """Base configuration driven by environment variables."""
 
-    # Optional. When unset, a strong key is generated and persisted in DATA_DIR
-    # on first start (see app/__init__.py:_ensure_secret_key), so a fresh deploy
-    # needs nothing more than a mounted data volume.
-    SECRET_KEY = os.environ.get("SECRET_KEY")
+    # A strong key is generated and persisted in DATA_DIR on first start (see
+    # app/__init__.py:_ensure_secret_key), so a fresh deploy needs nothing more
+    # than a mounted data volume.
+    SECRET_KEY = None
 
     DATA_DIR = DATA_DIR
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{DATA_DIR / 'tallyworth.db'}"
