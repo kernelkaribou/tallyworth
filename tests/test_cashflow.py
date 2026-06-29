@@ -140,6 +140,16 @@ def test_dashboard_shows_cashflow(client, app):
         data={"kind": "income", "name": "Salary", "amount": "1000"},
         follow_redirects=True,
     )
+    client.post(
+        "/cashflow",
+        data={"kind": "expense", "name": "Rent", "amount": "400"},
+        follow_redirects=True,
+    )
     resp = client.get("/")
     assert resp.status_code == 200
-    assert b"Monthly cashflow" in resp.data
+    body = resp.data
+    assert b"Monthly cashflow" in body
+    # Expanded Income - Expenses = Cashflow equation
+    assert b"Income" in body
+    assert b"Expenses" in body
+    assert b">Cashflow<" in body

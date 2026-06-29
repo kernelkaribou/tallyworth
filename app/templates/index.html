@@ -3,51 +3,34 @@
 
 {% block content %}
 <h1 class="sr-only">Dashboard</h1>
-<section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Current net worth</p>
-    <p class="mt-1 text-2xl font-semibold tabular-nums
-      {% if summary.net_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-      {{ summary.net_cents | money }}
-    </p>
-  </div>
+<section class="flex flex-col gap-3 sm:flex-row sm:items-stretch">
   <a
     href="{{ url_for('accounts.list_accounts') }}"
-    class="card-interactive rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
+    class="card-interactive flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
   >
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Assets</p>
     <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
       {{ summary.assets_cents | money }}
     </p>
   </a>
+  <div class="hidden sm:flex items-center justify-center text-3xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">&minus;</div>
   <a
     href="{{ url_for('accounts.list_accounts') }}"
-    class="card-interactive rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
+    class="card-interactive flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
   >
     <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Liabilities</p>
     <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
       {{ summary.liabilities_cents | money }}
     </p>
   </a>
-  <a
-    href="{{ url_for('cashflow.list_cashflow') }}"
-    class="card-interactive rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
-  >
-    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Monthly cashflow</p>
-    {% if cashflow.has_entries %}
-    <p class="mt-1 text-2xl font-semibold tabular-nums {% if cashflow.in_green %}text-slate-900 dark:text-slate-100{% else %}text-loss{% endif %}">
-      {{ cashflow.net_cents | money }}
+  <div class="hidden sm:flex items-center justify-center text-3xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">=</div>
+  <div class="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-4 shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Net worth</p>
+    <p class="mt-1 text-3xl font-bold tabular-nums
+      {% if summary.net_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+      {{ summary.net_cents | money }}
     </p>
-    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-      {{ cashflow.income_cents | money }} in &middot; {{ cashflow.expense_cents | money }} out
-    </p>
-    {% else %}
-    <p class="mt-1 text-2xl font-semibold text-slate-400 dark:text-slate-500">Not set up</p>
-    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-      Add income and expenses to track it.
-    </p>
-    {% endif %}
-  </a>
+  </div>
 </section>
 
 {% if chart_points %}
@@ -85,6 +68,50 @@
   <script id="networth-data" type="application/json">{{ chart_points | tojson }}</script>
 </section>
 {% endif %}
+
+<section class="mt-8" aria-labelledby="cashflow-heading">
+  <h2 id="cashflow-heading" class="flex items-center gap-2 text-lg font-semibold">
+    Monthly cashflow
+    {{ info_tooltip("A month-to-month income vs. expense indicator. It does not affect your net worth.") }}
+  </h2>
+  {% if cashflow.has_entries %}
+  <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-stretch">
+    <a
+      href="{{ url_for('cashflow.list_cashflow') }}"
+      class="card-interactive flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm"
+    >
+      <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Income</p>
+      <p class="mt-0.5 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+        {{ cashflow.income_cents | money }}
+      </p>
+    </a>
+    <div class="hidden sm:flex items-center justify-center text-2xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">&minus;</div>
+    <a
+      href="{{ url_for('cashflow.list_cashflow') }}"
+      class="card-interactive flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm"
+    >
+      <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Expenses</p>
+      <p class="mt-0.5 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+        {{ cashflow.expense_cents | money }}
+      </p>
+    </a>
+    <div class="hidden sm:flex items-center justify-center text-2xl font-light text-slate-400 dark:text-slate-500" aria-hidden="true">=</div>
+    <div class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 shadow-sm">
+      <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Cashflow</p>
+      <p class="mt-0.5 text-xl font-semibold tabular-nums {% if cashflow.in_green %}text-slate-900 dark:text-slate-100{% else %}text-loss{% endif %}">
+        {{ cashflow.net_cents | money }}
+      </p>
+    </div>
+  </div>
+  {% else %}
+  <a
+    href="{{ url_for('cashflow.list_cashflow') }}"
+    class="card-interactive mt-3 block rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-4 text-sm text-slate-500 dark:text-slate-400"
+  >
+    Not set up yet. Add income and expenses to track your monthly cashflow.
+  </a>
+  {% endif %}
+</section>
 
 <section class="mt-8 flex items-center justify-between">
   <h2 class="text-lg font-semibold">Accounts</h2>
