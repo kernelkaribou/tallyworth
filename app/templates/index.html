@@ -70,50 +70,6 @@
   </div>
 </section>
 
-<section class="panel mt-8" aria-labelledby="cashflow-heading">
-  <div class="panel-header">
-    <h2 id="cashflow-heading" class="panel-title">
-      Monthly cashflow
-      {{ info_tooltip("A month-to-month income vs. expense indicator. Not calculated into net worth.") }}
-    </h2>
-  </div>
-  <div class="panel-body">
-    {% if cashflow.has_entries %}
-    <a href="{{ url_for('cashflow.list_cashflow') }}" class="block">
-    <div class="metric-band row-interactive">
-      <div class="metric-cell">
-        <p class="metric-label">Income</p>
-        <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-          {{ cashflow.income_cents | money }}
-        </p>
-      </div>
-      <div class="metric-op" aria-hidden="true">&minus;</div>
-      <div class="metric-cell">
-        <p class="metric-label">Expenses</p>
-        <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-          {{ cashflow.expense_cents | money }}
-        </p>
-      </div>
-      <div class="metric-op" aria-hidden="true">=</div>
-      <div class="metric-cell-strong">
-        <p class="metric-label">Cashflow</p>
-        <p class="mt-1 text-xl font-semibold tabular-nums {% if cashflow.in_green %}text-slate-900 dark:text-slate-100{% else %}text-loss{% endif %}">
-          {{ cashflow.net_cents | money }}
-        </p>
-      </div>
-    </div>
-    </a>
-    {% else %}
-    <a
-      href="{{ url_for('cashflow.list_cashflow') }}"
-      class="card-interactive block rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 p-4 text-sm text-slate-500 dark:text-slate-400"
-    >
-      Not set up yet. Add income and expenses to track your monthly cashflow.
-    </a>
-    {% endif %}
-  </div>
-</section>
-
 <section class="panel mt-8" aria-labelledby="accounts-heading">
   <div class="panel-header">
     <h2 id="accounts-heading" class="panel-title">Accounts</h2>
@@ -199,6 +155,50 @@
     <p class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 p-8 text-center text-slate-500 dark:text-slate-400">
       No accounts yet. Add your first account to start tracking your net worth.
     </p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel mt-8" aria-labelledby="cashflow-heading">
+  <div class="panel-header">
+    <h2 id="cashflow-heading" class="panel-title">
+      Monthly cashflow
+      {{ info_tooltip("A month-to-month income vs. expense indicator. Not calculated into net worth.") }}
+    </h2>
+  </div>
+  <div class="panel-body">
+    {% if cashflow.has_entries %}
+    <a href="{{ url_for('cashflow.list_cashflow') }}" class="block">
+    <div class="metric-band row-interactive">
+      <div class="metric-cell">
+        <p class="metric-label">Income</p>
+        <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          {{ cashflow.income_cents | money }}
+        </p>
+      </div>
+      <div class="metric-op" aria-hidden="true">&minus;</div>
+      <div class="metric-cell">
+        <p class="metric-label">Expenses</p>
+        <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          {{ cashflow.expense_cents | money }}
+        </p>
+      </div>
+      <div class="metric-op" aria-hidden="true">=</div>
+      <div class="metric-cell-strong">
+        <p class="metric-label">Cashflow</p>
+        <p class="mt-1 text-xl font-semibold tabular-nums {% if cashflow.in_green %}text-slate-900 dark:text-slate-100{% else %}text-loss{% endif %}">
+          {{ cashflow.net_cents | money }}
+        </p>
+      </div>
+    </div>
+    </a>
+    {% else %}
+    <a
+      href="{{ url_for('cashflow.list_cashflow') }}"
+      class="card-interactive block rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 p-4 text-sm text-slate-500 dark:text-slate-400"
+    >
+      Not set up yet. Add income and expenses to track your monthly cashflow.
+    </a>
     {% endif %}
   </div>
 </section>
