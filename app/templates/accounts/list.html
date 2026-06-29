@@ -64,7 +64,7 @@
     <div class="rounded-lg border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-900/60 dark:bg-sky-950/30">
       <div class="text-sm font-semibold text-sky-800 dark:text-sky-300">Adds equity</div>
       <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ equity_types | map(attribute='name') | join(', ') }}</p>
-      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Equity is market value minus loan balance. Don't also add the loan as a separate liability.</p>
+      <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">The market value counts as an asset and the loan balance counts as a liability; net worth is the equity (value minus loan). Record the loan here, not as a separate liability account.</p>
     </div>
     <div class="rounded-lg border border-rose-200 bg-rose-50/60 p-4 dark:border-rose-900/60 dark:bg-rose-950/30">
       <div class="text-sm font-semibold text-rose-800 dark:text-rose-300">Subtracts balance</div>
