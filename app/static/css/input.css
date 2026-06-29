@@ -108,15 +108,11 @@
   }
 
   .metric-cell {
-    @apply flex-1 rounded-lg px-4 py-3 transition;
-  }
-
-  .metric-cell-link {
-    @apply hover:bg-white dark:hover:bg-slate-800;
+    @apply flex-1 rounded-lg px-4 py-3 text-center transition;
   }
 
   .metric-cell-strong {
-    @apply flex-1 rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-800 dark:ring-white/10;
+    @apply flex-1 rounded-lg bg-white px-4 py-3 text-center shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-800 dark:ring-white/10;
   }
 
   .metric-op {

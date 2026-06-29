@@ -43,19 +43,19 @@
     {% endif %}
 
     <div class="metric-band">
-      <a href="{{ url_for('accounts.list_accounts') }}" class="metric-cell metric-cell-link">
+      <div class="metric-cell">
         <p class="metric-label">Assets</p>
         <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
           {{ summary.assets_cents | money }}
         </p>
-      </a>
+      </div>
       <div class="metric-op" aria-hidden="true">&minus;</div>
-      <a href="{{ url_for('accounts.list_accounts') }}" class="metric-cell metric-cell-link">
+      <div class="metric-cell">
         <p class="metric-label">Liabilities</p>
         <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
           {{ summary.liabilities_cents | money }}
         </p>
-      </a>
+      </div>
       <div class="metric-op" aria-hidden="true">=</div>
       <div class="metric-cell-strong">
         <p class="metric-label">Net worth</p>
@@ -78,19 +78,19 @@
   <div class="panel-body">
     {% if cashflow.has_entries %}
     <div class="metric-band">
-      <a href="{{ url_for('cashflow.list_cashflow') }}" class="metric-cell metric-cell-link">
+      <div class="metric-cell">
         <p class="metric-label">Income</p>
         <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
           {{ cashflow.income_cents | money }}
         </p>
-      </a>
+      </div>
       <div class="metric-op" aria-hidden="true">&minus;</div>
-      <a href="{{ url_for('cashflow.list_cashflow') }}" class="metric-cell metric-cell-link">
+      <div class="metric-cell">
         <p class="metric-label">Expenses</p>
         <p class="mt-1 text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
           {{ cashflow.expense_cents | money }}
         </p>
-      </a>
+      </div>
       <div class="metric-op" aria-hidden="true">=</div>
       <div class="metric-cell-strong">
         <p class="metric-label">Cashflow</p>
