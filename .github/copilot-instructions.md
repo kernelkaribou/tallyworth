@@ -32,9 +32,9 @@ net worth figure, charts, and a per-timeframe net worth change summary.
   full market value to assets AND their loan balance to liabilities, so the loan is never masked
   and an underwater asset drives net worth negative without a negative asset figure. The net figure
   equals each asset's equity (value minus loan). `display_value_map` returns the gross market value
-  per account; `loan_balance_map` returns the loan portion for loan-tracking accounts so the UI can
-  show it as a liability sub-line. Income/expenses are a SEPARATE monthly cashflow indicator
-  and do NOT feed the net worth figure.
+  per account (the high-level figure shown on dashboard tiles and the accounts list); the per-account
+  loan/equity breakdown lives only on the account detail page. Income/expenses are a SEPARATE monthly
+  cashflow indicator and do NOT feed the net worth figure.
 - Accounts use a unified `account` table with an `account_type`. Account types have a
   `classification` (asset or liability) and a `tracks_loan` flag (equity types like
   Property/Vehicle: net worth gets value minus loan). The taxonomy is a fixed built-in set

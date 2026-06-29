@@ -86,12 +86,11 @@ def display_value_map(
     accounts: list[Account],
     snapshots: dict[int, tuple[int, int | None]] | None = None,
 ) -> dict[int, int]:
-    """Per-account primary figure: each account's gross market value.
+    """Per-account primary figure: each account's current (gross) market value.
 
-    Loan-tracking accounts show their full market value (the asset side); the
-    loan is surfaced separately via :func:`loan_balance_map` so the UI can show
-    it as a liability and reconcile with the gross net-worth summary.
-    Liabilities keep their positive magnitude (the UI colours them separately).
+    This is the high-level number shown on the dashboard tiles and accounts
+    list; the loan/equity breakdown lives on the account detail page. Liabilities
+    keep their positive magnitude (the UI colours them separately).
     """
     if snapshots is None:
         snapshots = latest_snapshot_map([a.id for a in accounts])
@@ -102,29 +101,6 @@ def display_value_map(
             continue
         value_cents, _loan_cents = snap
         result[account.id] = value_cents
-    return result
-
-
-def loan_balance_map(
-    accounts: list[Account],
-    snapshots: dict[int, tuple[int, int | None]] | None = None,
-) -> dict[int, int]:
-    """Outstanding loan balance per loan-tracking account.
-
-    Only loan-tracking accounts with a recorded snapshot appear in the map; the
-    loan counts as a liability in the gross net-worth summary.
-    """
-    if snapshots is None:
-        snapshots = latest_snapshot_map([a.id for a in accounts])
-    result: dict[int, int] = {}
-    for account in accounts:
-        if not account.account_type.tracks_loan:
-            continue
-        snap = snapshots.get(account.id)
-        if snap is None:
-            continue
-        _value_cents, loan_cents = snap
-        result[account.id] = loan_cents or 0
     return result
 
 

@@ -12,7 +12,6 @@ from app.services.networth import (
     current_net_worth,
     display_value_map,
     latest_snapshot_map,
-    loan_balance_map,
     net_worth_series,
 )
 
@@ -87,21 +86,7 @@ def test_display_value_map_shows_market_value(app):
         snapshots = latest_snapshot_map([house.id])
         assert snapshots[house.id] == (30000000, 18000000)
         values = display_value_map([house], snapshots)
-        loans = loan_balance_map([house], snapshots)
         assert values[house.id] == 30000000
-        assert loans[house.id] == 18000000
-
-
-def test_loan_balance_map_excludes_non_loan_accounts(app):
-    with app.app_context():
-        checking_type = AccountType.query.filter_by(name="Checking").first()
-        checking = Account(name="Checking", account_type=checking_type)
-        db.session.add(checking)
-        checking.values.append(AccountValue(value_cents=500000))
-        db.session.commit()
-
-        loans = loan_balance_map([checking])
-        assert checking.id not in loans
 
 
 def test_series_forward_fills_equity(app):
@@ -259,7 +244,7 @@ def test_loan_input_prefilled_with_latest_balance(client, app):
     assert b'value="120000.00"' in resp.data
 
 
-def test_dashboard_shows_loan_and_equity_for_loan_account(client, app):
+def test_dashboard_shows_market_value_only_for_loan_account(client, app):
     with app.app_context():
         type_id = AccountType.query.filter_by(name="Property (Equity)").first().id
     client.post(
@@ -273,11 +258,13 @@ def test_dashboard_shows_loan_and_equity_for_loan_account(client, app):
         follow_redirects=True,
     )
     body = client.get("/").get_data(as_text=True)
-    assert "300,000.00 loan" in body
-    assert "100,000.00 equity" in body
+    # High-level tile shows the current market value, not the loan/equity math.
+    assert "400,000.00" in body
+    assert "300,000.00 loan" not in body
+    assert "100,000.00 equity" not in body
 
 
-def test_accounts_list_shows_loan_and_equity_for_loan_account(client, app):
+def test_accounts_list_shows_market_value_only_for_loan_account(client, app):
     with app.app_context():
         type_id = AccountType.query.filter_by(name="Property (Equity)").first().id
     client.post(
@@ -291,6 +278,6 @@ def test_accounts_list_shows_loan_and_equity_for_loan_account(client, app):
         follow_redirects=True,
     )
     body = client.get("/accounts").get_data(as_text=True)
-    assert "400,000.00" in body  # full market value as the asset figure
-    assert "300,000.00 loan" in body
-    assert "100,000.00 equity" in body
+    assert "400,000.00" in body  # full market value as the current value
+    assert "300,000.00 loan" not in body
+    assert "100,000.00 equity" not in body

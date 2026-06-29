@@ -13,7 +13,6 @@ from app.services.networth import (
     current_net_worth,
     display_value_map,
     latest_snapshot_map,
-    loan_balance_map,
     net_worth_series,
 )
 
@@ -31,7 +30,6 @@ def index():
     )
     snapshots = latest_snapshot_map([a.id for a in active_accounts])
     values = display_value_map(active_accounts, snapshots)
-    loans = loan_balance_map(active_accounts, snapshots)
     trends = account_trends(active_accounts)
     summary = current_net_worth(active_accounts, snapshots)
     series = net_worth_series(active_accounts)
@@ -47,7 +45,6 @@ def index():
         summary=summary,
         accounts=active_accounts,
         values=values,
-        loans=loans,
         trends=trends,
         active_count=len(active_accounts),
         chart_points=chart_points,

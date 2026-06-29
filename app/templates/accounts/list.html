@@ -35,14 +35,6 @@
         <td class="px-4 py-3 text-right tabular-nums
           {% if account.account_type.classification.value == 'liability' %}text-loss{% endif %}">
           {{ values.get(account.id) | money }}
-          {% if account.account_type.tracks_loan and loans.get(account.id) is not none %}
-          <div class="text-xs font-normal text-loss">
-            &minus;{{ loans.get(account.id) | money }} loan
-          </div>
-          <div class="text-xs font-normal text-slate-500 dark:text-slate-400">
-            {{ (values.get(account.id) - loans.get(account.id)) | money }} equity
-          </div>
-          {% endif %}
         </td>
         <td class="px-4 py-3 text-right text-slate-500 dark:text-slate-400">
           {% if account.archived %}Closed{% else %}Active{% endif %}
