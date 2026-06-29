@@ -13,10 +13,10 @@ It is intentionally small. Tallyworth is **not** a budgeting app, a transaction
 tracker, or a financial planning tool. It does not connect to your bank. You are
 in full control of the numbers you enter.
 
-<p align="center">
-  <img src="docs/screenshot_1.jpeg" alt="Dashboard" width="33%" />
-  <img src="docs/screenshot_2.jpeg" alt="Accounts" width="33%" />
-  <img src="docs/screenshot_3.jpeg" alt="Cashflow" width="33%" />
+<p>
+  <img src="docs/screenshot_1.jpeg" alt="Dashboard" width="32%"/>
+  <img src="docs/screenshot_2.jpeg" alt="Accounts" width="32%" />
+  <img src="docs/screenshot_3.jpeg" alt="Cashflow" width="32%" />
 </p>
 
 ## What it does
