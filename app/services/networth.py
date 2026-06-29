@@ -86,10 +86,12 @@ def display_value_map(
     accounts: list[Account],
     snapshots: dict[int, tuple[int, int | None]] | None = None,
 ) -> dict[int, int]:
-    """Per-account primary figure: each account's current (gross) market value.
+    """Per-account summary figure: the account's net contribution to net worth.
 
     This is the high-level number shown on the dashboard tiles and accounts
-    list; the loan/equity breakdown lives on the account detail page. Liabilities
+    list. Loan-tracking assets show their **equity** (market value minus loan);
+    ordinary assets and liabilities show their current value. The full
+    market/loan/equity breakdown lives on the account detail page. Liabilities
     keep their positive magnitude (the UI colours them separately).
     """
     if snapshots is None:
@@ -99,8 +101,11 @@ def display_value_map(
         snap = snapshots.get(account.id)
         if snap is None:
             continue
-        value_cents, _loan_cents = snap
-        result[account.id] = value_cents
+        value_cents, loan_cents = snap
+        if account.account_type.tracks_loan:
+            result[account.id] = value_cents - (loan_cents or 0)
+        else:
+            result[account.id] = value_cents
     return result
 
 
