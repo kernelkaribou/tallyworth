@@ -73,7 +73,7 @@
   /* Subtle hover for full-width clickable rows/bands: just a shade change,
      no lift or ring. Used for account rows and the equation bands. */
   .row-interactive {
-    @apply transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60;
+    @apply transition-colors hover:bg-slate-200 dark:hover:bg-slate-700/70;
   }
 
   .timeframe-btn {

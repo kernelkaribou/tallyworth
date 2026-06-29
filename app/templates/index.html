@@ -145,7 +145,7 @@
         <div class="w-32 shrink-0 text-right sm:w-36">
           <p class="text-lg font-semibold tabular-nums
             {% if is_liability %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
-            {{ values.get(account.id) | money }}{% if is_liability and values.get(account.id) is not none %}<span class="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400">owed</span>{% endif %}
+            {{ values.get(account.id) | money }}
           </p>
         </div>
       </a>

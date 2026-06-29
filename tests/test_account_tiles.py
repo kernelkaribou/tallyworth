@@ -99,14 +99,16 @@ def test_dashboard_renders_tiles_with_sparkline(app, client):
     assert b"Tiled" in resp.data
 
 
-def test_liability_tile_shows_owed_and_improvement(app, client):
+def test_liability_tile_shows_value_in_loss_color(app, client):
     with app.app_context():
         aid = _make_account("Visa", type_name="Credit Card")
     client.post(f"/accounts/{aid}/values", data={"value": "500"}, follow_redirects=True)
     client.post(f"/accounts/{aid}/values", data={"value": "300"}, follow_redirects=True)
     resp = client.get("/")
     assert resp.status_code == 200
-    assert b"owed" in resp.data
+    assert b"owed" not in resp.data
+    assert b"text-loss" in resp.data
+    assert b"$300.00" in resp.data
 
 
 def test_liability_detail_uses_net_worth_impact(app, client):
