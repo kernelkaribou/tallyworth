@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf_field %}
+{% set is_liability = account.account_type.classification.value == 'liability' %}
+
+{% block title %}Edit value - {{ account.name }}{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-md">
+  <h1 class="text-xl font-semibold">Edit value</h1>
+  <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+    {{ account.name }} &middot; recorded {{ value.recorded_at | localdt("%Y-%m-%d %H:%M %Z") }}
+  </p>
+
+  <form
+    method="post"
+    action="{{ url_for('accounts.update_value', account_id=account.id, value_id=value.id) }}"
+    class="mt-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
+  >
+    {{ csrf_field() }}
+    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="value">
+      {% if account.tracks_loan %}Market value{% elif is_liability %}Balance owed{% else %}Value{% endif %}
+    </label>
+    <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
+      <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
+      <input
+        id="value"
+        name="value"
+        type="text"
+        inputmode="decimal"
+        required
+        value="{{ '%.2f'|format(value.value_cents / 100) }}"
+        class="w-full px-2 py-2 text-sm focus:outline-none dark:bg-slate-800 dark:text-slate-100"
+      />
+    </div>
+
+    {% if account.tracks_loan %}
+    <label class="mt-4 block text-sm font-medium text-slate-700 dark:text-slate-200" for="loan">
+      Loan balance
+    </label>
+    <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
+      <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
+      <input
+        id="loan"
+        name="loan"
+        type="text"
+        inputmode="decimal"
+        required
+        value="{% if value.loan_cents is not none %}{{ '%.2f'|format(value.loan_cents / 100) }}{% endif %}"
+        placeholder="0.00"
+        class="w-full px-2 py-2 text-sm focus:outline-none dark:bg-slate-800 dark:text-slate-100"
+      />
+    </div>
+    {% endif %}
+
+    <div class="mt-6 flex items-center gap-2">
+      <button
+        type="submit"
+        class="btn-primary"
+      >
+        Save value
+      </button>
+      <a
+        href="{{ url_for('accounts.account_detail', account_id=account.id) }}"
+        class="rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+      >
+        Cancel
+      </a>
+    </div>
+  </form>
+</section>
+{% endblock %}

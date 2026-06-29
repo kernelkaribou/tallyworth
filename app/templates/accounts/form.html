@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf_field %}
+
+{% set editing = account is not none %}
+{% set lock_type = lock_type|default(false) %}
+
+{% block content %}
+<section class="mx-auto max-w-lg">
+  <h1 class="text-xl font-semibold">
+    {{ "Edit account" if editing else "Add account" }}
+  </h1>
+
+  <form
+    method="post"
+    action="{{ url_for('accounts.update_account', account_id=account.id) if editing else url_for('accounts.create_account') }}"
+    class="mt-6 space-y-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
+  >
+    {{ csrf_field() }}
+    <div>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="name">Name</label>
+      <input
+        id="name"
+        name="name"
+        type="text"
+        required
+        value="{{ account.name if editing else request.form.get('name', '') }}"
+        class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+        placeholder="e.g. Main Checking"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" {% if not lock_type %}for="account_type_id"{% endif %}>
+        Account type
+      </label>
+      {% if lock_type %}
+      <div class="mt-1 flex items-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-600 dark:text-slate-300">
+        {{ account.account_type.name }} ({{ account.account_type.classification.value }})
+      </div>
+      <input type="hidden" name="account_type_id" value="{{ account.account_type_id }}" />
+      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        The type is locked because this account already has recorded values.
+      </p>
+      {% else %}
+      <select
+        id="account_type_id"
+        name="account_type_id"
+        required
+        class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+      >
+        <option value="" disabled {% if not editing and not request.form.get('account_type_id') %}selected{% endif %}>
+          Choose a type
+        </option>
+        {% for t in account_types %}
+        <option
+          value="{{ t.id }}"
+          data-tracks-loan="{{ 't' if t.tracks_loan else 'f' }}"
+          {% if (editing and account.account_type_id == t.id) or (not editing and request.form.get('account_type_id') == t.id|string) %}selected{% endif %}
+        >
+          {{ t.name }} ({{ t.classification.value }})
+        </option>
+        {% endfor %}
+      </select>
+      {% endif %}
+    </div>
+
+    {% if not editing %}
+    <div>
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="initial_value">
+        Starting value (optional)
+      </label>
+      <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
+        <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
+        <input
+          id="initial_value"
+          name="initial_value"
+          type="text"
+          inputmode="decimal"
+          value="{{ request.form.get('initial_value', '') }}"
+          class="w-full px-2 py-2 text-sm focus:outline-none"
+          placeholder="0.00"
+        />
+      </div>
+    </div>
+
+    <div id="initial-loan-wrap" class="hidden">
+      <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="initial_loan">
+        Loan balance (optional)
+      </label>
+      <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
+        <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
+        <input
+          id="initial_loan"
+          name="initial_loan"
+          type="text"
+          inputmode="decimal"
+          value="{{ request.form.get('initial_loan', '') }}"
+          class="w-full px-2 py-2 text-sm focus:outline-none"
+          placeholder="0.00 (enter 0 if owned outright)"
+        />
+      </div>
+      <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        Equity is the starting value minus this loan balance.
+      </p>
+    </div>
+    {% endif %}
+
+    <div class="flex items-center gap-3">
+      <button
+        type="submit"
+        class="btn-primary"
+      >
+        {{ "Save changes" if editing else "Create account" }}
+      </button>
+      <a
+        href="{{ url_for('accounts.account_detail', account_id=account.id) if editing else url_for('accounts.list_accounts') }}"
+        class="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700"
+      >
+        Cancel
+      </a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if not editing %}
+<script nonce="{{ csp_nonce }}">
+  (function () {
+    var select = document.getElementById("account_type_id");
+    var loanWrap = document.getElementById("initial-loan-wrap");
+    if (!select || !loanWrap) {
+      return;
+    }
+    function sync() {
+      var option = select.options[select.selectedIndex];
+      var tracksLoan = option && option.dataset.tracksLoan === "t";
+      loanWrap.classList.toggle("hidden", !tracksLoan);
+    }
+    select.addEventListener("change", sync);
+    sync();
+  })();
+</script>
+{% endif %}
+{% endblock %}

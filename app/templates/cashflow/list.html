@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% from "_macros.html" import info_tooltip, trash_icon, csrf_field %}
+
+{% macro entry_rows(entries, accent) %}
+  {% if entries %}
+  <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+    {% for entry in entries %}
+    <li class="flex items-center gap-3 px-4 py-3">
+      <form
+        method="post"
+        action="{{ url_for('cashflow.update_cashflow', entry_id=entry.id) }}"
+        class="flex flex-1 items-center gap-3"
+      >
+        {{ csrf_field() }}
+        <input
+          type="text"
+          name="name"
+          value="{{ entry.name }}"
+          required
+          aria-label="{{ entry.kind.value | capitalize }} name"
+          class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+        />
+        <input
+          type="text"
+          name="amount"
+          value="{{ '%.2f'|format(entry.amount_cents / 100) }}"
+          inputmode="decimal"
+          required
+          aria-label="{{ entry.kind.value | capitalize }} amount"
+          class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums focus:border-money-500 focus:outline-none dark:bg-slate-900 {{ accent }}"
+        />
+        <button
+          type="submit"
+          class="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+        >
+          Save
+        </button>
+      </form>
+      <form
+        method="post"
+        action="{{ url_for('cashflow.delete_cashflow', entry_id=entry.id) }}"
+        data-confirm="Deleting the {{ entry.kind.value }} &ldquo;{{ entry.name }}&rdquo; ({{ entry.amount_cents | money }}) cannot be undone."
+        data-confirm-title="Delete entry?"
+        data-confirm-label="Delete"
+        data-confirm-tone="danger"
+      >
+        {{ csrf_field() }}
+        <button
+          type="submit"
+          aria-label="Delete entry"
+          title="Delete"
+          class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-slate-400 hover:text-red-700 dark:text-slate-500 dark:hover:text-red-400"
+        >
+          {{ trash_icon() }}
+        </button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">Nothing here yet.</p>
+  {% endif %}
+{% endmacro %}
+
+{% macro add_form(kind, label) %}
+<form
+  method="post"
+  action="{{ url_for('cashflow.create_cashflow') }}"
+  class="flex items-center gap-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 px-4 py-3"
+>
+  {{ csrf_field() }}
+  <input type="hidden" name="kind" value="{{ kind }}" />
+  <input
+    type="text"
+    name="name"
+    placeholder="{{ label }} name"
+    required
+    aria-label="{{ label }} name"
+    class="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+  />
+  <input
+    type="text"
+    name="amount"
+    placeholder="0.00"
+    inputmode="decimal"
+    required
+    aria-label="{{ label }} amount"
+    class="w-28 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-right text-sm tabular-nums focus:border-money-500 focus:outline-none dark:bg-slate-900 dark:text-slate-100"
+  />
+  <button
+    type="submit"
+    class="rounded-lg bg-money-600 dark:bg-money-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-money-700 dark:hover:bg-money-500"
+  >
+    Add
+  </button>
+</form>
+{% endmacro %}
+
+{% block content %}
+<section>
+  <h1 class="flex items-center gap-2 text-xl font-semibold">
+    Monthly cashflow
+    {{ info_tooltip("A light view of money in versus money out. Amounts are typical monthly figures, not transactions. This does not affect your net worth or account liabilities.") }}
+  </h1>
+</section>
+
+<section class="mt-6 grid gap-4 sm:grid-cols-3">
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Income</p>
+    <p class="mt-1 text-2xl font-semibold text-gain">
+      {{ summary.income_cents | money }}
+    </p>
+  </div>
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Expenses</p>
+    <p class="mt-1 text-2xl font-semibold text-loss">
+      {{ summary.expense_cents | money }}
+    </p>
+  </div>
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">
+      {% if summary.in_green %}In the green{% else %}In the red{% endif %}
+    </p>
+    <p class="mt-1 text-2xl font-semibold {% if summary.in_green %}text-gain{% else %}text-loss{% endif %}">
+      {{ summary.net_cents | money }}
+    </p>
+  </div>
+</section>
+
+<section class="mt-8 grid gap-6 lg:grid-cols-2">
+  <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+    <h2 class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      Income
+    </h2>
+    {{ entry_rows(income, "text-gain") }}
+    {{ add_form("income", "Income") }}
+  </div>
+  <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+    <h2 class="px-4 py-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+      Expenses
+    </h2>
+    {{ entry_rows(expenses, "text-loss") }}
+    {{ add_form("expense", "Expense") }}
+  </div>
+</section>
+{% endblock %}

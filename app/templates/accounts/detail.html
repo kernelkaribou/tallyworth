@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% from "_macros.html" import info_tooltip, trash_icon, csrf_field %}
+
+{% block content %}
+{% set is_liability = account.account_type.classification.value == 'liability' %}
+<section class="flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <h1 class="text-xl font-semibold">{{ account.name }}</h1>
+    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      {{ account.account_type.name }} ({{ account.account_type.classification.value }})
+      {% if account.archived %}
+        <span class="ml-2 rounded bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs">Closed</span>
+      {% endif %}
+    </p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a
+      href="{{ url_for('accounts.edit_account', account_id=account.id) }}"
+      class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+    >
+      Edit
+    </a>
+    <form method="post" action="{{ url_for('accounts.toggle_archive', account_id=account.id) }}"
+      {% if not account.archived %}
+      data-confirm="Closing {{ account.name }} hides it from your dashboard and net worth total. You can reopen it at any time."
+      data-confirm-title="Close this account?"
+      data-confirm-label="Close account"
+      data-confirm-tone="default"
+      {% endif %}
+    >
+      {{ csrf_field() }}
+      <button
+        type="submit"
+        class="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+      >
+        {{ "Reopen" if account.archived else "Close" }}
+      </button>
+    </form>
+  </div>
+</section>
+
+<section class="mt-6 grid gap-4 sm:grid-cols-2">
+  {% if account.tracks_loan %}
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:col-span-2">
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div>
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Market value</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          {{ account.current_value_cents | money }}
+        </p>
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Loan balance</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-loss">
+          {{ account.current_loan_cents | money }}
+        </p>
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Equity</p>
+        <p class="mt-1 text-2xl font-semibold tabular-nums
+          {% if account.equity_cents is not none and account.equity_cents < 0 %}text-loss{% else %}text-slate-900 dark:text-slate-100{% endif %}">
+          {{ account.equity_cents | money }}
+        </p>
+      </div>
+    </div>
+  </div>
+  {% elif is_liability %}
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Balance owed</p>
+    <p class="mt-1 text-3xl font-semibold tabular-nums text-loss">
+      {{ account.current_value_cents | money }}
+    </p>
+    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+      Net worth impact
+      <span class="font-medium text-loss">{{ account.signed_value_cents | money }}</span>
+    </p>
+  </div>
+  {% else %}
+  <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Current value</p>
+    <p class="mt-1 text-3xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+      {{ account.current_value_cents | money }}
+    </p>
+  </div>
+  {% endif %}
+
+  <form
+    method="post"
+    action="{{ url_for('accounts.add_value', account_id=account.id) }}"
+    class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
+  >
+    {{ csrf_field() }}
+    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="value">
+      {% if account.tracks_loan %}Record market value &amp; loan{% else %}Record a new value{% endif %}
+    </label>
+    <div class="mt-1 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
+      <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
+      <input
+        id="value"
+        name="value"
+        type="text"
+        inputmode="decimal"
+        required
+        class="w-full px-2 py-2 text-sm focus:outline-none"
+        placeholder="{% if account.tracks_loan %}Market value{% else %}0.00{% endif %}"
+      />
+    </div>
+    {% if account.tracks_loan %}
+    <div class="mt-2 flex items-center rounded-lg border border-slate-300 dark:border-slate-600 px-3 focus-within:border-money-500">
+      <span class="text-slate-400 dark:text-slate-500">{{ currency_symbol }}</span>
+      <input
+        id="loan"
+        name="loan"
+        type="text"
+        inputmode="decimal"
+        required
+        value="{% if account.current_loan_cents is not none %}{{ '%.2f'|format(account.current_loan_cents / 100) }}{% endif %}"
+        class="w-full px-2 py-2 text-sm focus:outline-none"
+        placeholder="Loan balance (0 if owned outright)"
+      />
+    </div>
+    {% endif %}
+    <button
+      type="submit"
+      class="mt-3 btn-primary"
+    >
+      Save value
+    </button>
+  </form>
+</section>
+
+<section class="mt-8">
+  {% if history %}
+  {% if account.tracks_loan %}
+    {% set chart_help = "Equity (market value minus the outstanding loan) over time." %}
+  {% elif is_liability %}
+    {% set chart_help = "Net worth impact over time. Paying down this liability moves the line upward toward " ~ (0 | money) ~ "." %}
+  {% else %}
+    {% set chart_help = "Account value over time." %}
+  {% endif %}
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="flex items-center gap-2 text-lg font-semibold">
+      History
+      {{ info_tooltip(chart_help) }}
+    </h2>
+    <div id="account-timeframe" role="group" aria-label="Chart timeframe" class="flex flex-wrap items-center gap-1">
+      <button type="button" class="timeframe-btn" data-range="1m" aria-pressed="false">1M</button>
+      <button type="button" class="timeframe-btn" data-range="3m" aria-pressed="false">3M</button>
+      <button type="button" class="timeframe-btn is-active" data-range="1y" aria-pressed="true">1Y</button>
+      <button type="button" class="timeframe-btn" data-range="ytd" aria-pressed="false">YTD</button>
+      <button type="button" class="timeframe-btn" data-range="3y" aria-pressed="false">3Y</button>
+      <button type="button" class="timeframe-btn" data-range="5y" aria-pressed="false">5Y</button>
+      <button type="button" class="timeframe-btn" data-range="lifetime" aria-pressed="false">Lifetime</button>
+    </div>
+  </div>
+  <p id="account-history-summary" class="mt-2 text-sm text-slate-500 dark:text-slate-400"></p>
+  <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+    <div class="h-72">
+      <canvas
+        id="account-history-chart"
+        data-chart-source="account-history-data"
+        data-timeframe-control="account-timeframe"
+        data-default-range="1y"
+        data-summary-target="account-history-summary"
+        data-symbol="{{ currency_symbol }}"
+        {% if show_baseline %}data-baseline="zero"{% endif %}
+        data-label="{% if account.tracks_loan %}Equity{% elif is_liability %}Net worth impact{% else %}Value{% endif %}"
+        data-timezone="{{ display_timezone }}"
+      ></canvas>
+    </div>
+  </div>
+  <script id="account-history-data" type="application/json">{{ chart_points | tojson }}</script>
+  <div class="mt-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 dark:bg-slate-900/40 text-left text-slate-500 dark:text-slate-400">
+        <tr>
+          <th class="px-4 py-3 font-medium">Recorded</th>
+          {% if account.tracks_loan %}
+          <th class="px-4 py-3 text-right font-medium">Market value</th>
+          <th class="px-4 py-3 text-right font-medium">Loan</th>
+          <th class="px-4 py-3 text-right font-medium">Equity</th>
+          {% else %}
+          <th class="px-4 py-3 text-right font-medium">{% if is_liability %}Balance owed{% else %}Value{% endif %}</th>
+          {% endif %}
+          <th class="px-4 py-3 text-right font-medium">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+        {% for v in history %}
+        <tr>
+          <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
+            {{ v.recorded_at | localdt("%Y-%m-%d %H:%M %Z") }}
+          </td>
+          {% if account.tracks_loan %}
+          <td class="px-4 py-3 text-right tabular-nums">{{ v.value_cents | money }}</td>
+          <td class="px-4 py-3 text-right tabular-nums text-loss">{{ v.loan_cents | money }}</td>
+          <td class="px-4 py-3 text-right tabular-nums font-medium">{{ v.equity_cents | money }}</td>
+          {% else %}
+          <td class="px-4 py-3 text-right tabular-nums {% if is_liability %}text-loss{% endif %}">{{ v.value_cents | money }}</td>
+          {% endif %}
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            <a
+              href="{{ url_for('accounts.edit_value', account_id=account.id, value_id=v.id) }}"
+              class="align-middle text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >Edit</a>
+            <form
+              method="post"
+              action="{{ url_for('accounts.delete_value', account_id=account.id, value_id=v.id) }}"
+              class="ml-3 inline"
+              {% if account.tracks_loan %}
+              data-confirm="Deleting the entry from {{ v.recorded_at | localdt('%b %d, %Y') }} (value {{ v.value_cents | money }}, loan {{ v.loan_cents | money }}) cannot be undone."
+              {% else %}
+              data-confirm="Deleting the {{ 'balance' if is_liability else 'value' }} of {{ v.value_cents | money }} recorded on {{ v.recorded_at | localdt('%b %d, %Y') }} cannot be undone."
+              {% endif %}
+              data-confirm-title="Delete value?"
+              data-confirm-label="Delete"
+              data-confirm-tone="danger"
+            >
+              {{ csrf_field() }}
+              <button type="submit" aria-label="Delete value" title="Delete" class="inline-flex align-middle text-slate-400 hover:text-red-700 dark:text-slate-500 dark:hover:text-red-400">{{ trash_icon() }}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <h2 class="text-lg font-semibold">History</h2>
+  <p class="mt-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-6 text-center text-slate-500 dark:text-slate-400">
+    No values recorded yet.
+  </p>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if history %}
+<script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/line-chart.js') }}"></script>
+{% endif %}
+{% endblock %}

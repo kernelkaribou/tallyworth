@@ -1,0 +1,16 @@
+services:
+  web:
+    image: ghcr.io/kernelkaribou/tallyworth:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      # All persistent data (SQLite database + auto-generated secret) lives here.
+      - ./tallyworth-data:/data
+    environment:
+      # Own the data files as this host user/group, and set your timezone.
+      PUID: 1000
+      PGID: 1000
+      TZ: Etc/UTC
+      # Optional display currency (defaults to USD).
+      # DEFAULT_CURRENCY: EUR
+    restart: unless-stopped
